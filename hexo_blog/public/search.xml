@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title><![CDATA[python基本用法]]></title>
+    <url>%2F2018%2F01%2F06%2Fpython%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95%2F</url>
+    <content type="text"><![CDATA[import module和package: module是一个.py文件，导入一个module就是把这个python文件加载进内存 package是一个文件夹，必须有_ _init_ _.py文件,导入一个package就是将_ _init_ _.py加载进内存，并且import package的时候自动执行_ _init_ _.py文件 import 机制 import导入的所有包都在sys.modules中 from A import B，导入一个包或者模块中的部分文件或者函数 绝对导入和相对导入： 绝对导入： 搜索路径： sys.path() 如果直接python test.py,那么test.py的路径是在sys.path中的 如果想搜索某个module或者package，只需将其所在文件夹的路径加入sys.path即可：sys.path.append() 获取当前python文件路径： pwd = os.getcwd() pwd = os.path.dirname(pwd) 相对导入： 形如from .. import x 在python3中，找到当前目录是通过_name_，特别地，如果直接python执行某个python文件，那么_name_就是_main_,那么当前目录就是顶层目录 如果_name_是A.B.C说明当前目录为B,那么from .. 的路径就是A，from . 就是B]]></content>
+      <categories>
+        <category>python</category>
+      </categories>
+      <tags>
+        <tag>python</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[几种web服务器]]></title>
+    <url>%2F2017%2F11%2F16%2F%E5%87%A0%E7%A7%8Dweb%E6%9C%8D%E5%8A%A1%E5%99%A8%2F</url>
+    <content type="text"><![CDATA[之前也算做过一点web开发，一直对nginx,apache,tomcat在高并发，多进程下的原理不太了解，现在终于搞清楚一些了。 nginx,apahe属于一类，都属于静态服务器，适合展示静态资源。对于动态请求，通常要靠php，python等cgi程序。真正处理用户请求的是cgi程序。一个用户请求就会开一个php进程（类似php index.php这样）。 tomcat是动态服务器，tomcat本身就是一个java程序，一个java程序对应一个jvm,一个jvm就是一个进程。所以tomcat只有一个进程，每个请求会在jvm开一个线程来处理。 nginx,apache的区别： nginx本身有1个master进程，4个worker进程（cpu核数），nginx内部用了epoll，一个进程处理多个socket连接，实现高并发。(当该进程在等待某个cgi程序的处理结果时，不能让它阻塞在这里，而是注册一个回调函数，然后去接收新的socket连接)一般用来做反向代理，负载均衡。 apache给每个连接都开一个进程。 epoll是实现io复用的一种方法，目的是在一个进程中处理多个socket连接。玩法： 123456789while(1)&#123; events=epoll_wait(); //内核去轮询 for(event: events)&#123; if(事件被触发)&#123; event.callback() &#125; &#125; accept(); // epoll中加入新的socket&#125; mq消息队列 典型用法：用于进程或者服务间通信，还可以共享消息，一个生产者可以对应多个消费者。比如有多个service,service1,service2,service3。service1对数据库的某个改动影响到了service2,3。不用消息队列的话，service2，3需要提供一个接口，当service1改动的时候调用这2个接口，但是这样很不优雅而且耦合太大。用了消息队列的话就可以将这个改动push到消息队列，谁用谁自己去取。 test]]></content>
+      <categories>
+        <category>计算机基础</category>
+      </categories>
+      <tags>
+        <tag>nginx</tag>
+        <tag>tomcat</tag>
+        <tag>apache</tag>
+        <tag>jvm</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[数据库基础知识]]></title>
+    <url>%2F2017%2F11%2F11%2F%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%2F</url>
+    <content type="text"><![CDATA[基本语句：\G show index from tableName alter table tablename add index (columnList) show create table tableName desc tableNamed 1234567891011 CREATE TABLE animals ( id int(20) NOT NULL AUTO_INCREMENT, title vchar(255) NOT NULL DEFAULT ‘’, url vchar(255) NOT NULL DEFAULT ‘’, pv int(20) NOT NULL DEFAULT 0, comment_number int(20) NOT NULL DEFAULT 0, publish_time timestamp NOT NULL DEFAULT ‘0000-00-00 00:00:00’, create_time timestamp NOT NULL DEFAULT ‘0000-00-00 00:00:00’, update_time timestamp NOT NULL DEFAULT ‘0000-00-00 00:00:00’, PRIMARY KEY (id)); 事务四大特性：ACID Atomicity: 原子性，一个事务里面的所有操作要么全部成功，要么全部失败回滚。 Consistency: 一致性，一致性是指事务必须使数据库从一个一致性状态变换到另一个一致性状态，也就是说一个事务执行之前和执行之后都必须处于一致性状态。拿转账来说，假设用户A和用户B两者的钱加起来一共是5000，那么不管A和B之间如何转账，转几次账，事务结束后两个用户的钱相加起来应该还得是5000，这就是事务的一致性。 Isolation: 隔离性，隔离性是当多个用户并发访问数据库时，比如操作同一张表时，数据库为每一个用户开启的事务，不能被其他事务的操作所干扰，多个并发事务之间要相互隔离。即要达到这么一种效果：对于任意两个并发的事务T1和T2，在事务T1看来，T2要么在T1开始之前就已经结束，要么在T1结束之后才开始，这样每个事务都感觉不到有其他事务在并发地执行。 Durability: 持久性是指一个事务一旦被提交了，那么对数据库中的数据的改变就是永久性的，即便是在数据库系统遇到故障的情况下也不会丢失提交事务的操作。 事务提交： 当一组操作都成功完成时，就可以提交事务。 数据库索引： 数据库索引内部包括B+树索引，hash索引，大部分是B+树索引。查询时间是o(logn)的。B+树索引支持多种比较，如&gt;,&lt;,like，hash索引只支持=。 B+树对中文的索引，之前一直想不清楚，其实中文也是按照utf8编码存储的，本质上也可以看做是一个字符串。 索引的类型包括主键索引，唯一索引，聚集索引。 索引提高了查询速度，但是增加了空间，同时也提高了增删改的时间，因为需要改索引。]]></content>
+      <categories>
+        <category>计算机基础</category>
+      </categories>
+      <tags>
+        <tag>数据库</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[网络代理调研]]></title>
+    <url>%2F2017%2F11%2F11%2F%E7%BD%91%E7%BB%9C%E4%BB%A3%E7%90%86%E8%B0%83%E7%A0%94%2F</url>
+    <content type="text"><![CDATA[超哥让我调研网络代理情况，网络代理大致分为以下几种： socks代理：会话层，不管上层协议是什么，只是负责盲转发。应用层内容不解析。 http/https代理： 又称网页代理，是一个应用层的代理，典型的如fidder,charles,这种代理可以解析https的内容。这里以charles为例简单说一下它的原理： charles打开之后，浏览器所有的请求都会被转发到charles来处理。手机抓包的时候需要保证手机和电脑在一台局域网内并且在手机上设置代理到电脑的8888端口，这是charles的默认端口，可以改，这样手机上的所有请求都会被转发到charles来处理 默认情况下，charles只能解析http包，这样对https的包就会乱码，解决这个问题需要开启charles的ssl代理，然后443的端口也会被解析。charles解析https协议的原理如下： 对ssl的握手信息，伪造一份目标网站的证书，这样就相当于一个中间人攻击，charles在客户端和服务端分别建立了2条https链接，2套不同的密钥。这样的问题就是怎么让证书通过认证，所以需要安装charles的一个根证书颁发机构rootCA,rootCA对每个域名动态签发一个证书。由于rootCA被客户端信任(手动),所以rootCA颁发的证书也都被信任。 建立多个网站的镜像，这也是http/https的代理，比如zmirror]]></content>
+      <tags>
+        <tag>代理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[python,pip多个版本共存混乱的解决]]></title>
+    <url>%2F2017%2F09%2F19%2Fpython-pip%E5%A4%9A%E4%B8%AA%E7%89%88%E6%9C%AC%E5%85%B1%E5%AD%98%E6%B7%B7%E4%B9%B1%E7%9A%84%E8%A7%A3%E5%86%B3%2F</url>
+    <content type="text"><![CDATA[今天在搞django的时候又被各种python版本共存的问题坑了。记录一下： 首先区分两个概念: usr:unix system resource /usr/bin,/usr/lib/,usr/lib64,一般unix系统的软件和lib都在这个里面，yum安装的一般都在这个目录下 /usr/local/bin,/usr/local/lib，这个一般非yum安装的软件会放到这个目录下 多个版本的python其实比较好解决，用那个设一下软连接就可以了，pip是2的，pip3是3的 今天我遇到的这个问题是python3和pip3不匹配，现在我的Python3在/usr/bin下，所以它的模块默认搜索路径是/usr/lib/,/usr/lib64，但是pip3是在/usr/local/bin下的，所以pip3安装的模块都在/usr/local/python3.4/site-packages下，所以就找不到模块 解决办法：yum安装pip3(/usr/bin)下，然后设置pip的软连接到/usr/pip3,这样pip安装的模块就在/usr/lib64/site-packages下了。]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>python</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[BFS的一般写法]]></title>
+    <url>%2F2017%2F09%2F10%2FBFS%E7%9A%84%E4%B8%80%E8%88%AC%E5%86%99%E6%B3%95%2F</url>
+    <content type="text"><![CDATA[因为我自己对BFS一直不是很6，帮柳华做笔试题的时候很简单的一个bfs都没有写对，现在总结一下。 BFS一般用队列来实现，现在以二叉树的层次遍历为例，这是一个典型的BFS。 队列的写法： 1234567891011121314151617181920212223242526272829 class Solution &#123;public: vector&lt;vector&lt;int&gt;&gt; levelOrder(TreeNode* root) &#123; vector&lt;vector&lt;int&gt;&gt; result; if(root==NULL)&#123; return result; &#125; queue&lt;TreeNode*&gt; que; que.push(root); while(!que.empty())&#123; int len=que.size(); vector&lt;int&gt; temp; //遍历每一层的节点 for(int i=0;i&lt;len;i++)&#123; TreeNode* node=que.front(); que.pop(); temp.push_back(node-&gt;val); if(node-&gt;left)&#123; que.push(node-&gt;left); &#125; if(node-&gt;right)&#123; que.push(node-&gt;right); &#125; &#125; result.push_back(temp); &#125; return result; &#125;&#125;; 在编程之美上还有没有用到stl的队列，用vector去模拟的队列，这里代码也放上。 1234567891011121314151617181920212223242526272829 class Solution &#123;public: vector&lt;vector&lt;int&gt;&gt; levelOrder(TreeNode* root) &#123; vector&lt;vector&lt;int&gt;&gt; result; if(root==NULL)&#123; return result; &#125; vector&lt;TreeNode*&gt; vec; vec.push_back(root); int cur=0,last; //cur表示当前遍历的节点，last表示下一层的节点 while(cur&lt;vec.size())&#123; int last=vec.size(); vector&lt;int&gt; temp; while(cur&lt;last)&#123; temp.push_back(vec[cur]-&gt;val); if(vec[cur]-&gt;left)&#123; vec.push_back(vec[cur]-&gt;left); &#125; if(vec[cur]-&gt;right)&#123; vec.push_back(vec[cur]-&gt;right); &#125; cur++; &#125; result.push_back(temp); &#125; return result; &#125; &#125;;]]></content>
+      <categories>
+        <category>面试题</category>
+      </categories>
+      <tags>
+        <tag>leetcode</tag>
+        <tag>BFS</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[c语言字符串处理函数]]></title>
+    <url>%2F2017%2F08%2F24%2Fc%E8%AF%AD%E8%A8%80%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%A4%84%E7%90%86%E5%87%BD%E6%95%B0%2F</url>
+    <content type="text"><![CDATA[c语言中虽然没有c++中那么多字符串处理函数，但是其实有很多都不用我们重复造轮子。 strtol: 字符串转整数 sprintf() 格式化读入数据到字符串中，用好了很神奇，比如： 12sprintf(str,&quot;%02x-%02x&quot;,sum1,sum2);//将sum1,sum2转换成16进制并且存入str snprintf() 同sprintf,加了长度防止越界 fprintf() 格式话读入数据到文件流中 strncpy() 复制n个字符，不够n个后面填充0 strstr: 求是否包含子串，用来处理经常遇到的abc=123,将abc和123分别存入两个字符串中 12345678910char str[]=&quot;abc=123&quot;;char str1[10],str2[10];char* p=strstr(str,&quot;=&quot;);if(p==NULL)&#123; return;&#125;int len1=p-str;strncpy(str1,str,len1);str1[len1]=&apos;\0&apos;;strncpy(str2,len1+1,10); sscanf: scanf,sscanf,fscanf中，空格都是分割符，%s,%d后面匹配的时候遇到空格都会停止。%后面是正则却不会停止。 一个非常强大的函数，作用是从一个字符串中提取想要的子串，支持正则表达式，用好了的话非常强大。参考资料 读取配置文件(以空格为分割符): “abc 123” 1234char str[]=&quot;abc 123&quot;;char str1[10],str2[10]; sscanf(str,&quot;%s%s&quot;,str1,str2); //%s可以换成%d,自动完成str to int的转换 读取配置文件(不以空格为分割符): “abc=123” 1234char str[]=&quot;abc=123&quot;;char str1[10],str2[10];// %[^=]表示遇到=就停止写入sscanf(str,&quot;%[^=]=%s&quot;,str1,str2); 提取某个子串: “abcd/1345@789”,提取/和@之间的部分 1234char str[]=&quot;abcd/1345@789&quot;;char str1[10],str2[10];sscanf(str,&quot;%*[^/]/%[^@]&quot;,str1);//%*[^@]表示遇到@就停止但是不写入 fscanf: 用于从文件中解析有规律的字符串，和sscanf类似，只不过来源变成了文件流。 scanf: 和sscanf类似，只不过第一个参数来源变成了用户的输入]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c/c++</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[makefile示例]]></title>
+    <url>%2F2017%2F08%2F24%2Fmakefile%E7%A4%BA%E4%BE%8B%2F</url>
+    <content type="text"><![CDATA[123456789101112131415161718192021222324252627282930313233343536CC = gccTARGET_DIR = ../../mysapp/plug/business/live_monitorTARGET_CONF_DIR = ../../mysapp/conf/live_monitorTARGET = live_monitor.soINF = ../bin/live_monitor.infCONF = ../conf/live_list.csvCFLAGS = -g -Wall -fPICLIB = -lpthreadLIB += -lMESA_handle_loggerLIB += -lMESA_prof_loadLIB+= -lMESA_htableINCLUDES = -I./inc/INCLUDES += -I/usr/include/MESASOURCES = $(wildcard *.c)OBJECTS = $(SOURCES:.c=.o)DEPS = $(SOURCES:.c=.d).PHONY : clean all installall : $(TARGET)$(TARGET) : $(OBJECTS) $(CC) $(CFLAGS) -shared -o $(TARGET) $(LIB) $(OBJECTS)%.o : %.c $(CC) $(CFLAGS) -c $&lt; -o $@%.d : %.c $(CC) $&lt; -MM $(INCLUDES) &gt; $@ -include $(DEPS)clean : -rm $(TARGET) $(OBJECTS) $(DEPS) ../bin/$(TARGET) -rm -rf $(TARGET_DIR) -rm -rf $(TARGET_CONF_DIR)install : -mkdir $(TARGET_DIR) -cp $(TARGET) $(TARGET_DIR) -cp $(TARGET) ../bin -cp $(INF) $(TARGET_DIR) -mkdir $(TARGET_CONF_DIR) -cp $(CONF) $(TARGET_CONF_DIR) makefile的执行过程：其实make clean,make install都是我们定义的，make x,makefile就会去找x，然后根据依赖文件一步步找下去。 wildcard *.c:当前文件夹中所有的.c文件 $(SOURCES: .c=.o):将.c都变成.o .d文件存的是每个.c文件依赖的.c文件,-include $(DEPS)不能少 $&lt;和$@都是临时变量 .PHONY的作用：定义一个伪目标，保证这条命令一定会被执行。如果不加的话，比如make clean,由于clean没有依赖文件，如果当前目录中存在一个文件叫clean，那么clean后面的语句就不会执行。]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c/c++</tag>
+        <tag>makefile</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[信息安全的一些问题]]></title>
+    <url>%2F2017%2F08%2F24%2F%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E9%97%AE%E9%A2%98%2F</url>
+    <content type="text"><![CDATA[ssh的原理： ssh 是用来保证安全登录的，保证密码不被别人截获，默认端口为22 ssh登录时，服务器先发给你一个公钥，然后用户把密码用公钥加密后发给服务器，服务器用私钥解密。 known hosts: 但是这种方法容易被中间人攻击，即有人伪造服务器。所以在登录时服务器会把自己的公钥发给你，问你是否同意连接。当你同意的时候就会存到known_hosts文件中，里面是受信任的服务器的公钥。 密钥登录：但是这样还是需要每次都输入密码。密钥登录就是用户在本地用rsa生成密钥对。公钥放在服务器上，登录时，服务器先发来一个随机的字符串，用户用私钥加密后传给服务器，服务器用公钥解密，如果解密成功，就说明登录成功。私钥加密，公钥解密，就是所谓的签名了。github的ssh登录就是这样做的。 authorized_keys: 里面存的是一些公钥，公钥对应的用户可以直接通过密钥登录。类似于github让你放公钥的地方。authorized_keys的权限是600，.ssh的权限是700，否则失败。 参考资料：阮一峰博客 https原理： https=http+ssl。tls可以看做是ssl 3.0 ssl首先三次握手协商出一个密钥A，协商的过程是非对称加密，目的是为了让双方都知道A，但是密钥传输加密，防止中间人攻击。协商出密钥之后就是对称加密了。 协商密钥的过程，首先客户端先请求服务器拿到服务器的公钥，然后生成密钥A，用公钥加密A传给服务器，然后服务器用私钥解密拿到A。这个过程非常类似ssh的登录过程。 同理，为了防止有人伪造服务器，浏览器需要确认从服务器拿到的公钥是正确的,这时候就需要证书了。有了证书之后，服务器发给客户端的就不是公钥，而是证书。 证书内包含网站的公钥和证书颁发机构，消息摘要算法等信息，这些信息通过生成一个摘要(如md5)，然后用CA（受信任的证书颁发机构）的私钥对这个摘要加密(签名)。这样的证书是没有办法伪造的，因为你没有CA的私钥，你的客户端用CA的公钥解出来的签名肯定是不对的。 关于CA的公钥，当客户端收到信息时，CA的公钥一般装系统时都在电脑里了。 类似12306这种网站，没有去CA买证书，而是需要自己去官网下根证书。这样是不安全的，因为没有上面的验证过程，你必须信任从根证书上拿到的公钥，但是如果根证书被伪造，就很容易被中间人攻击了。 关于CA的证书链，CA分为多级，最高的证书颁发机构成为根证书颁发机构，这个一般内置在操作系统中，证书的认证过程是这样的：rootCA – CA1 – CA2。CA2给google颁发了证书。那么证书验证过程中，rootCA信任CA1,CA1信任CA2,CA2信任google,那么这个证书链就打通了，就是说这个证书是受信任的。所谓的信任就是通过用公钥去解密摘要，看和证书里面的是否一致。 参考资料：数字证书原理 关于签名： 摘要：摘要是对正文信息的md5,本身没有防止攻击的能力 签名：签名是对摘要进行私钥加密，然后验证时用公钥。 签名只能保证信息不被伪造，但是不能保证不被截获，因为消息中大部分内容是不加密的，只要摘要加密。]]></content>
+      <categories>
+        <category>信息安全</category>
+      </categories>
+      <tags>
+        <tag>信息安全</tag>
+        <tag>ssh</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[入组培训code review总结]]></title>
+    <url>%2F2017%2F08%2F21%2F%E5%85%A5%E7%BB%84%E5%9F%B9%E8%AE%ADcode-review%E6%80%BB%E7%BB%93%2F</url>
+    <content type="text"><![CDATA[今天入组培训又被超哥吊打了，code review给我挑了很多毛病，对此我是服气的，感谢超哥和佳哥。下面具体说说： 文件的组织： src: .c makefile bin: .so .inf makefile conf: .conf 值得一提的是，bin中的makefile是假的makefile，他的作用就是cd到src目录，然后执行src中的makefile,文件的组织和makefile可以看gitlab上live_monitor的项目,比较规范。 当一个函数需要返回多个值的时候，这个时候就要想到传入指针或者引用来解决。切记，百度面试string to int也是这个问题。 考虑不全面，比如ip监控的时候有个合法的ip,我们判断的时候要判断src ip || dst ip在列表中的时候就放行，否则合法的ip只能出去回不来了。 不要重复造轮子，读配置文件可以用MESA load prof这个公共库。写日志可以用MEx’x’x’x’x’x’x’x’x’xSA handle logger这个库(下划线打不出来)。 用CJSON,比较专业。 另外，自己写读配置文件的时候，要写的优雅一点，每需要一个配置就去扫描整个配置文件一遍，这样虽然效率低，但是很整齐。 不要随便拆成两个文件，完全不相关的函数才拆成两个文件。 超过20行的字符串处理就要考虑glic中自带的库。具体见c语言基础,长期更新 输出错误信息时要输出具体的系统的错误(errno, strerror(errno)) malloc和free最好成对出现，即在同一个函数中 每个.c都对应一个头文件，不是所有的声明都要放到头文件中。放到头文件中是要给别人用的，也就是说如果某个函数只有本文件用，那么就不用放到头文件中。 cpp代码要给c用的时候，用extern ‘C’，具体见c语言基础,长期更新 多用assert，表示你很确定这个情况不会发生，出现就死。 free后要把指针置为NULL,养成习惯。 同一个全局变量不用在两个文件中重复声明，加一个extern就行了。具体见c语言基础,长期更新 比如声明一块空间来存一个结构体，最好用sizeof来代替宏 struct conflist conflist；这种写法不推荐，相当于面包牌面包，可以换成如struct conflist myconflist; usleep最小的精度就是10,比如usleep(1)，也是10us 变量名前面加下划线表示该变量只有我自己用，你们千万别用 我有一个get_port的函数，需要调用两次得到src_port和dst_port，为了区分还设了一个flag，完全可以传入src_port和dst_port的指针一次返回。]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c/c++</tag>
+        <tag>CR</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[百度实习体验]]></title>
+    <url>%2F2017%2F07%2F10%2F%E7%99%BE%E5%BA%A6%E5%AE%9E%E4%B9%A0%E4%BD%93%E9%AA%8C%2F</url>
+    <content type="text"><![CDATA[今天是在百度的最后一天了，4个月的实习经历一眨眼就要过去了。回头看一下，发现自己竟然已经走了那么远，看看当时面试时候的博客，觉得自己当时那么傻逼，除了会做点算法题什么都不会,虽然现在仍然很菜。 总体来说，这段实习经历还是非常值得的。虽然每天都很累，从来没有10前下过班，但是也成长了许多。从刚开始的啥都不懂到现在独立负责一个项目，我觉得自己可以hold住，并不比正式的差。 简单说下自己的几点感悟吧： 进入BAT并没有那么难（老大一直劝我转正，被我拒绝了）。但是同样都是BAT的码农，差别却大了去了。有的只能做一些基础的业务开发（比如我所在的百家号），每天用php写一些简单的逻辑，实在是没有意思，写10个项目和写1个项目没有什么区别。在我实习的这段时间内，没有见过任何的算法，但凡涉及到算法的，都是调用IDL或者大搜的服务。但是同时百度也有IDL这样的高端部门。这也是我读研的原因，如果研究生毕业还是以进入BAT为目标，那么说明研究生白读了，还不如直接转正留下来呢。读完研后的目标应该是进入BAT的核心部门，做算法工程师。不要写没有技术含量的业务代码，否则很容易被替代，要做一点有门槛的工作，才能避免吃青春饭。 关于百度的工程师文化，具体的体现就是技术人员的话语权很大，RD&gt;FE&gt;QA&gt;PM&gt;BD&gt;外包。由于QA和PM大部分都是女生，所以很多时候需要一些沟通技巧（比如撒娇卖萌哄着RD）。参与过几次评审，基本上是RD占据主动，PM只能妥协（不好意思，这个需求做不了）。QA基本打酱油。这样的好处和坏处都很明显，好处就是百度出去的技术都不是很水，但是百度的产品很弱就是了，我见到的PM每天就是研究竞品，然后想着怎么抄袭就行了，奇怪的是，高层竟然认同这种行为，美名其曰：人类共同的财富。 关于业务和算法，2017年，百度押宝内容分发，我所在的百家号也属于疯狂扩张之中，不停的来新人，我3月份来的，走的时候已经是老人了。特别是来了很多糯米的人（糯米倒闭了）。但是可能由于技术没有什么难度，招进来不少水货RD（有的还要我这个实习生教他写代码）高T很少，T6都不多。大部分都是T3，T4，T5.听说策略那边有很多高T（T8，T9）。所以还是不要做业务，尽量做算法方向或者分布式系统方向，有点难度的。做业务真的没有意思，我来的时候一点都不会php，但是没关系，就算你不会，你照猫画虎，照着别人的抄都能把功能实现。因为大部分都是一些逻辑判断，数据库操作，ral调用，拼一下就行了。 关于QA和RD，反正在百度，基本QA都是白盒测试，QA也是按照RD的标准招的。不存在只是点点点的情况（外包的活）。有些RD比QA的技术还菜。但是QA和RD的技能点不一样倒是真的。根据我的观察： QA重要的技能点： linux知识（特别是像awk,sed等命令的用法熟练，还有vim的操作）。 熟练掌握一门脚本语言如python/shell/php（因为QA经常需要写一些脚本来统计一些东西或者搭建环境，这是基础技能）。 技术的广度（你需要什么都了解一些，大到机器学习，spark,nmq，小到一个框架的原理，如Bingo框架的路由分发原理）。 基本的测试技能（如怎么压测）。 追查问题能力，这个特别重要，因为很多时候，比如线上出了问题和用户报了case.是QA在第一时间定位到问题然后给对应的RD去修复。这也是QA的优势，因为RD大多只是负责自己的那个模块，对其他模块都不太熟悉，但是QA因为各个模块都要测试，所以对各个模块都比较了解，比较容易定位到问题。 自动化测试框架的搭建。怎么搭建环境，放在持续集成平台（agile）。怎么编写自动化case,覆盖到所有分支，上线之前跑一遍自动化case. RD重要的技能点： 跟职位有关，技能可能相对来说比较单一，但是必须精通，比如你php开发，那你必须精通php和相关的框架，和nginx服务器原理等。但是你如果是一个算法工程师，那你只要知道相关的机器学习算法即可。比如我们这有一个博士，只会用python，但这就够了。 简单说下自己的收获吧： 首先是在一个成熟的大公司待了4个月，学了很多流程和规范。就像正规军一样。比如一个项目从开始到结束：首先要PM立项, 然后编写MRD，然后确定排期，然后需求评审，PM，QA，RD都要参加，在这里确定需求，什么能做，什么不能做，然后技术评审，确定技术方案。在这里确定RD和QA的排期。然后RD开始介入开发，同时QA开始编写测试case和准入case.RD过了准入case后开始提测（项目比较大可能需要分步提测）。如果项目质量太差QA可以提测直接打回。然后QA开始测试，RD修bug，测试可能需要几轮，不停回归。测试通过后就要上线了，首先需要确定上线方案，上线一般是先上预览机（小流量，设置cookie可以打到预览机）。在预览机上线上回归，然后上单台，然后上单边，然后全量。上线之后还需要线上继续回归。最后需要加上监控和报警。如果上线之后出了问题，先回滚，止损然后再追查问题。必要时需要服务降级。事故之后要做一个case study，大家一起总结问题，吸取经验。还有一些其他的规范比如提交代码必须经过code review(机器审核，代码风格检查+人工审核)。比如分支开发，分支发布，上线之前不能合入主干。上线之后删除分支。 然后学到了一些线上问题的处理方案：我记得刚来的时候就出了一次比较严重的事故，我们线上的一个非核心服务挂掉了，这个服务是通过nmq调用的，导致nmq不停重试。但是核心服务和这个服务共用一个nmq，一个topic，导致nmq队列严重积压。影响了核心服务的处理。当时这个问题的解决方案是紧急下掉那个非核心服务，然后跳过nmq的命令点，先止损，不能影响核心的发文服务。事后总结的结论是架构不合理，核心服务依赖于非核心服务，需要做服务拆分，不能放在一个消息队列里面。 还有一次是我们被盗链，别人利用百家号上传视频，但是并不发文，然后将mediaID拼出播放链接。相当于利用我们的流量来获取利润。当时上传的是泄露出的人民的名义，流量巨大，造成了很大的损失。当时的紧急方案是连夜加班，对mediaID 进行加密。 还有就是学会了一门语言，php,上手简单，框架方便，开发起来无脑。不愧为最好的语言。但是写的时间长了可能会变得退化。 还有就是了解了一些常用的技术，如nmq（百度内部的消息队列），redis（k-v型的nosql数据库）。nginx反向代理用来做负载均衡，spark用来做大数据流处理计算，我们主要用来统计日志。bns百度内部的域名解析服务，bfe百度内部的统一外部接入层。 参加了3个比较大的项目，用户等级权益，父子账号，马甲号视频。 还有就是参与了组里自动化测试框架的开发，当时我刚来的时候完全没有任何自动化测试，后来在一个高工的带领下，我开始编写自动化测试框架，框架主要基于phpunit单元测试，编写自动化测试case.我走的时候已经覆盖了80%的接口测试并且接入了我们的持续集成平台，上线之前必须跑一遍自动化测试。收益很大。 然后就是写了很多的脚本，和一些接口，用来做一些统计，并且接入百度内部的统一前端展示平台showx（包含折线图，表格等）进行展示。给老大看，主要包括每日发文量统计，发文成功率统计，作者分润统计等。 然后给RD提供了很多有价值的建议，我记得有一次，有一个数据库的事务，3个数据库必须同时修改成功才成功，然后需要发送短信，但是rd把发送短信放在了3个修改数据库操作的中间，这样如果失败的话，数据库操作会回滚，但是发送短信又不能回滚，我建议他把发送短信放在最后面。 最后，感谢这段忙碌但是每天都能感受到自己的成长的日子，感谢我的老大，对我特别好，感谢我的师傅，教了我很多。感谢一起工作的一群靠谱的百度同学，感谢一起实习的小伙伴。这段经历对我来说很难忘。PS： 百度的PM同学真的都特别漂亮，百度科技园的饭真的特别好吃。]]></content>
+      <categories>
+        <category>实习</category>
+      </categories>
+      <tags>
+        <tag>百度</tag>
+        <tag>实习</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[mysql数据导入导出]]></title>
+    <url>%2F2017%2F05%2F29%2Fmysql%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%85%A5%E5%AF%BC%E5%87%BA%2F</url>
+    <content type="text"><![CDATA[mysql 导出数据到文件:mysql -h 10.38.26.21 -P 5100 -uwangguoqiang01 -pabH6j2HUQ7 media -e “select id from app order by id desc limit 10” &gt; export.log导出数据,文件名不能加引号 mysql导入数据到数据库：load data local infile “./BadCase2.data” into table org_info character set gbk; mysql导出sql语句到文件中：mysqldump -h10.38.26.21 -P5100 -uwangguoqiang01 -pabH6j2HUQ7 media app –skip-lock-tables &gt; test.txt]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>mysql</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[百度地图交通路线部门实习面试]]></title>
+    <url>%2F2017%2F03%2F03%2F%E7%99%BE%E5%BA%A6%E5%9C%B0%E5%9B%BE%E4%BA%A4%E9%80%9A%E8%B7%AF%E7%BA%BF%E9%83%A8%E9%97%A8%E5%AE%9E%E4%B9%A0%E9%9D%A2%E8%AF%95%2F</url>
+    <content type="text"><![CDATA[今天下午去面试了百度地图，下午两点在前台登记后，然后过了一会就有人带我去面试了，一个小型的茶水室，有很多零食，周围还有人在讨论问题，反正很吵。一面面试官是给我发邮件的那个男生，感觉挺厉害的。人也非常好（程序员都比较单纯？），然后简单自我介绍下就开始面试了。 一面 开始让我介绍了下自己的项目，我给他介绍了我的逃逸系统，然后他问我这个过程中最难的是什么，我都准备过，这个没什么问题， 然后他看我简历上网络的比较多，说你对网络比较熟悉吧，我说恩，那他说你讲一下你知道的吧，然后我就开始说TCP，UDP区别呀，三次握手什么的，后悔很多其他的（拥塞控制，滑动窗口，快速重传等）比较高端的没有说。只是说了最简单的一些东西。 然后他看见我的简历上的东西有抢红包软件，挺感兴趣的，我就给他讲了一下他的原理。他好像就是随便问问。 然后就开始写题，让我写一个把字符串转换成数字，leetcode原题，但是我很久以前做的，都忘记了。有了上次的经验，我先问他有没有字母，他说有，我说那都是ascll码吧，他说是。然后我就开始写了。这里直接血崩，我当时不知道怎么脑子一抽，直接从后往前遍历，还考虑什么末尾有很多0的情况。给他讲的时候，他说你这为什么从后往前呀，我突然意识到自己错了。妈的直接从前往后就行了，太傻逼了。然后就又写了一个，写完之后他问我如果有负数怎么办，（艹，我直接没有考虑），又判断了一下。这下问题来了，他问我异常情况怎么办，我说返回-1，他说那要本来就是-1呢，我一看gg了，说那我直接cout输出，他说直接cout不好吧，我去调用你这个函数你总得给我返回点什么吧，我说那抛出异常，try catch，他说可以，是一种方法。然后他提醒我用一用引用，我懂了，直接将结果用引用传进函数，然后异常就可以返回-1了，然后就没了。 标准代码在这： 123456789101112131415161718192021int transform(int&amp; result,string str)&#123; int len=str.length(); result=0; int flag=1; if(len==0) return -1; //error if(str[0]==&apos;-&apos;) //负数 flag=-1; int i=0; if(flag==-1)&#123; i=1; &#125; for(;i&lt;len;i++)&#123; if(str[i]&gt;=&apos;0&apos;&amp;&amp;str[i]&lt;=&apos;9&apos;) result=result*10+str[i]-&apos;0&apos;; else return -1; //有其他字符 &#125; result*=flag; return 0; //无异常&#125; 然后他问我简历上解决常见算法问题，都有哪些啊，我说dp，快排，什么的，他说，那你写个快排吧，这次我一下子就写好了，他问我有什么问题，我说没有，然后他说你看key=nums[0]，每次都取这个吗，我一看傻逼了，赶紧说应该是key=nums[left].然后他又看了看，没说什么了。然后说你等会我给你找二面。我没想到还要二面，以为自己gg了。 二面 二面看起来就像个领导，上来让我介绍自己的项目，我说哪一个，他说你随便介绍一个吧，我又把逃逸系统说了一遍，给他详细讲了原理和架构以及逃逸方法，然后他问我这个有什么用，我说用来测试IDS的性能，帮助更好的改进。 然后他问我实习时间呀什么的，我说可以从四月到8月，然后他说你愿意做前端吗，我说可以啊，感觉他好像对我的前端很感兴趣，我赶紧说我不熟，只是当时项目要用才临时学的。然后他说你说你自学能力比较强，怎么证明，我说比如当时要写爬虫，就临时学个python就去写了。他说让你来pc端的前端你愿意吗，我说也可以呀。估计去了做前端？ 然后他说你知道C++的什么高级特性吗，我本来想说STL，lambda表达式什么的，但是我实在不太会，就不敢说。他说那你用过STL吗，我说用过map，hashmap，stack，queue,priorqueue等，他好像不太满意。最后问了我一个问题，说static是什么，我说是静态变量，说了下静态变量在编译时分配内存，画了下c语言的内存模型，在.data段。他好像不是想问这个，问我那在类里面的静态变量呢，我说类里面静态变量是属于这个类，new一个对象的时候不会为实例分配内存，这个对象对static变量的改动会影响另一个类。静态成员函数只能调用静态变量等，然后他就没问了。 然后他说面试结束了，你有什么问题吗，我问了个百度加班是不是996，他说了一大堆我也没听，然后问他百度对实习生有没有什么培训，他说实习生比较少，培训主要有讲座什么的，可以自愿去。然后他说面试结束了，我送你出去吧。只有两面，估计gg了。 出来的时候，我滴滴打了一辆车，然后正在等车的时候接到了hr的电话，说我前天面试的百度内容生态质量部的面试过了。还说我不能同时接受两个offer。所以我百度地图不管结果怎样都没用。然后我又发了封邮件问了下面试官，他人真的很好，建议我先接受offer。感觉百度的人都挺好的。 最后总结一下，一定要多刷题，百度至少要做两道算法题，感觉百度问的字符串处理比较多。然后一定要写以前问清楚要求。多沟通，多考虑特殊情况。不要想我一样上来就闷头写，结果要求都搞错了。 刷题的话，leetcode其实不用刷完，很多太难的不会考，把经典的多看几遍就可以了。其实常考的面试题就那么多，这里推荐张斌师兄给我的《程序员面试金典》，《剑指offer》，好多原理，要多看几遍。还有就是多练习在白板上写代码，和在IDE上写差别还是挺大的，白板上不能随便改。 就这样吧。]]></content>
+      <categories>
+        <category>面试题</category>
+      </categories>
+      <tags>
+        <tag>百度地图  实习生  面试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[百度内容生态质量部测试实习面试]]></title>
+    <url>%2F2017%2F03%2F01%2F%E7%99%BE%E5%BA%A6%E5%86%85%E5%AE%B9%E7%94%9F%E6%80%81%E8%B4%A8%E9%87%8F%E9%83%A8%E6%B5%8B%E8%AF%95%E5%AE%9E%E4%B9%A0%E9%9D%A2%E8%AF%95%2F</url>
+    <content type="text"><![CDATA[事情是这样的，一直以来都想找份公司的实习，错过了大三的实习，保研之后又到实验室实习，所以完美错过各种实习，大四实习机会越来越少，基本上都不招大四的学生，所以大规模春招我投不了，那是为了校招提前招的。 到了三月我真的急了，写了个爬虫，爬取北邮人的招聘信息，随便投了几个公司。其中只有百度回我了，而且是中午12点投的，下午3点多，我还在听师兄们答辩，hr就打电话问我明天能不能来面试，我说可以。当时我的心里是懵逼的，压根没准备啊，赶紧回来看书，因为我在简历上写了很多网络编程的东西，什么IO复用，多线程，epoll啊，其实我压根不熟悉啊，所以睡觉之前一直在恶补《linux高性能服务器开发》，而且很多算法题都没做啊，所以很慌，一直到去的车上还在看数据库（数据库忘光了啊）。 然后第二天去面试，我10点多到的，去了之后没什么人，在前台登记后，10点半的时候，有个姐姐过来喊我去面试，我跟着她去了个会议室，一对一面试。 一面 开始让我自我介绍，我简单说了一下，然后问我简历上的东西，让我介绍了一下逃逸系统，这个是最近正在做的，给她讲了一下，感觉她大概觉得还不错，是自己做的。 然后问我用过python吗，我说自学过，只会写简单的爬虫，她说我看你带了电脑，不如看下你的爬虫啊，我就给她看了爬实习信息的爬虫，她看了下，没说什么。 然后问我会不会linux命令，我说会一些网络相关的，她问我知不知道awk,sed，我说不知道，说了些网络的，nc，ps，netstat，感觉她也不懂。 然后她说看你写了捕包，你都怎么捕包啊，我说windows下用wireshark，她说你这不是mac系统吗，我说mac下我一般用tcpdump，tcpdump也是用pcap实现的，她好像很满意。 然后问我道题，很多字符串存在一个很大的文件中，怎么提高检索速度，我说用Hash表，她说可以，然后问还有呢，我说，将字符串计算md5，然后再Hash。好像她还是不满意，提醒我说，如果某个词的出现频率很高呢，我说那按照出现频率排序，然后从出现频率高的开始找。这个后来想想不对，但是她也没问了。 然后问我测试的话，百度搜索输入框应该如何测试呢，我说可以输入敏感词，比如xjp，输入框计算，输入乱码，输入攻击代码等，她说可以，然后问还有吗，我想不出来了，她提醒我还要超过多少字之后，最近新闻的优先放，我补了一句比如百度的优先放在前面，她说不是，我们是根据用户点击量来的，我的内心毫无波动，甚至还有点想笑。后来想想还可以英文，其他语言等。 然后她又问了下我从你在百度搜索到返回结果发生了什么，我说了dns解析，http请求等，她好像不满意，问我http回复的是什么东西，我说是html源代码，css，js代码，她说那是怎么显示出你看的效果来的呢，我懂了，然后说这是浏览器渲染解析得到的，然后她就没问了。 最后又问了我一道题，说怎么在一个很大的文件中找到出现次数最小的10个数，我想了下，这不是找最小的k个数吗，然后说先预处理，统计每个词出现次数，然后快排，或者大根堆的方法，她说可以，估计她没听懂。然后一面就结束了，我问还有二面吗，她说有，再给我联系。最后她走的时候和我说其实最后一道题用shell命令几行就可以了，我说哦，那shell的原理是什么呢，她说这你就别管了（估计她也不知道），反正别人封装好了，肯定比你的那些方法好。 二面 本来想问我项目的，说前面是不是问过了，我说是的，她说那你直接说这个项目最好的地方是什么，不好的地方是什么，我说好在模块化设计，不好在于特定场景下，她也没问了。 然后让我写一道题，合并两个有序数组，我说是归并排序的merge操作吗，她说是，我想这太简单了，2分钟就写好了，然后给她讲了一下，她说可以，然后问我你怎么测试你的程序，我说输入为空，数组长度为0，非法输入等，然后她一直问还有吗，因为我是用vector写的，所以根本没有其他的问题，最后实在想不出来了，我说vector也会爆栈，她说还有吗，我说没有了。 然后问我怎么交换两个变量，不用额外空间，我说大二数值分析（其实是离散数学）学过用异或来实现，然后给她写了一下，她说还有吗，我想了几分钟，实在想不出来，就说没有了。 然后让我测试一下旁边的自动售货机，我说输入假币，买不存在的物品，暴力破坏，她一直问还有吗，我最后都说停电怎么办，灯坏了怎么办，她还问还有吗（难道你叫还有吗）。然后她说你这都是异常情况下，正常情况下呢，我说正常就投入真钱，买存在的物品就可以了啊，然后她没问了。 然后她说你做过测试吗，我说没有，之前只是测试过自己的程序，不需要考虑复杂的场景下，她说哦。 然后问我如果需求和开发的结果不一样怎么办，我听不懂，她给我解释了半天我才明白，然后我说当然让开发跟着需求走啊。 然后问我会php吗，我说不会，然后问我有没有用过服务器,apache，nginx等，我说没有，用过tomcat，她就没问了。 然后她说你有什么问题吗，我问了下百度这个地点是做什么的，她说是做百度知道，百度百科和地图方面的，我问那西二旗呢，她说西二旗现在没有业务了，都在百度科技园。然后我又问了下，测试和开发的技能书，她说测试可能技术要求没有那么高，但是你什么都要知道。（跟我差不多） 然后她问我去吃饭吗，我说我还要三面吗，她说有，我说那直接面吧，然后她就去联系boss了。 三面 三面应该是部门负责人，看起来30多岁，上来先问我多大，哪里人呀，在实验室怎么融入团队的。我以为是聊聊天。 然后突然就问我tcp三次握手，为什么不能是两次或者四次，这太简单了，我给她画了三次握手和四次挥手的图。然后说为什么四次挥手，三次握手，她说为什么不能是两次呢，我说这样不能保证连接建立。她说为什么，你说为什么，我想了一下，说如果没有第三次的ack，如果第二次的syn丢了，那么tcp会误认为连接已经建立。她好像很满意。 然后让我写socket编程的过程，我给她写了几个，她好像不太懂，还问我哪个是客户端，哪个是服务器。 然后她说我们来写道题吧，删除字符串中重复的字符。我想了一下，写了一个，先遍历统计每个字符出现的次数，然后再遍历一遍，次数&gt;0的就加入结果，并将次数记为0,她一开始没懂，一直问我为什么要置为0，可不可以不要，我说不可以，她想了一会才明白（我的锅，其实只要一遍遍历标记一下有没有出现过就行，不用遍历两遍，我的方法比较奇葩）。然后问我结果1000有没有问题，我说没有，她提醒我说字符串，所以最多256位（我的锅，当时脑子懵逼）。然后又说如果不是ascll码呢，我说那就设为输入的长度，她说对。 然后她又把题改了，不能用标记数组，字符改为a-z,只给一个int，我想了半天没有想出来，她提醒我说int32位，字幕26位。我说我刚才想到了位图法，没敢说，我说了用每个二进制位表示一个状态，0表示没出现过，1表示出现过，她说思路是对的，那你会位运算吗，我说会，她说那你写试试吧。然后我写出来了。她看了下，还可以。 最后问我实习时间，能不能马上来，我说最多两周后，最多8月初，我说实验室还有些东西要交接。她说那你开学后还能来吗，我说不能，因为在雁栖湖上课。她说那你最多只能实习4个多月，熟悉环境就要2-3个月，刚上手就走了。然后我说我最快15号来，她说好吧，走吧，我请你吃饭，然后就和她吃饭去了。我问她我是回去等通知吗，她说我回去再看看前面面试官的评价，你等hr的邮件吧。 人生第一次面试就结束了，最后一面那个算法其实很简单，没回答好，其他还行。就这样吧，等待hr通知，但愿能够通过。 3.3号更新：拿到offer了，效率挺高，两天就给offer了]]></content>
+      <categories>
+        <category>面试题</category>
+      </categories>
+      <tags>
+        <tag>百度</tag>
+        <tag>内容生态质量部</tag>
+        <tag>测试开发</tag>
+        <tag>实习</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[今天我又把服务器搞挂了]]></title>
+    <url>%2F2017%2F01%2F11%2F%E4%BB%8A%E5%A4%A9%E6%88%91%E5%8F%88%E6%8A%8A%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%90%9E%E6%8C%82%E4%BA%86%2F</url>
+    <content type="text"><![CDATA[今天我又把服务器搞挂了，咦，我为什么要说又？哦，上次是由于运行fragroute的时候把路由表修改了，导致ssh命令无法使用，连接不到服务器，路由表项删掉就没事了。 如果说上次还是小问题的话，那么这次就是大问题了，因为我这次是真的把服务器搞挂了，重启都没用。 事情还要从前两天说起，我用sapp平台发IP包的时候，分过片的就是无法发出去，其实也不是发不出去，而是协议栈直接把我分过片的包重组后再发出去，这样的话我的逃逸就没用了。所以本来打算直接从MAC层发过去的，但是坑爹的是Sapp平台的话发包很麻烦，也收不到MAC层的包。佳哥建议我换个低一点的系统试一下，RedHat 7.2肯定是不行了。然后我就去试了试227那台服务器。 问题来了，当我尝试在227上运行SAPP时，提示我”libc.so.6: version `GLIBC_2.14’ not found”，然后我想当然的认为是缺少lib.so.6这个库，就从203那里复制了一个进来，没想到scp命令刚刚执行完就跪了，马上断开连接。服务器跪了，重启也不行。事后才发现原来这个库是很重要的库，复制进来的库把原来的库覆盖了，但是新的库和操作系统并不兼容，所以就跪了。 而且，而且，我搞挂了2台服务器，前一天晚上我搞挂了227，但是我当时并不确定是我那个操作弄挂的。第二天又找来yng师兄看着我重复，刚刚执行完scp就又挂了。这才确定，然后赶紧去找运维人员。 由此得到的教训： 遇到问题不要想当然，如果我先查一下就不会有这么多问题了。 涉及到更改系统库的操作时一定要小心小心再小心。 技术上来讲，libc.so.6是一个软连接（因为版本号在后面，如果是文件的话，版本号应该在中间），因为我把libc.so.6改了，原来指向glibc 2.12,现在指向glibc 2.17,但是系统并没有glic2.17这个版本。所以操作系统就崩溃了。正确的做法应该是先安装glibc 2.17,然后再把libc.so.6改过来。]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>服务器</tag>
+        <tag>教训</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[图片像素和分辨率的一些知识]]></title>
+    <url>%2F2017%2F01%2F01%2F%E5%9B%BE%E7%89%87%E5%83%8F%E7%B4%A0%E5%92%8C%E5%88%86%E8%BE%A8%E7%8E%87%E7%9A%84%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%2F</url>
+    <content type="text"><![CDATA[像素：实际上就是显示器上的一个一个点，可以把显示器想象成一个个坑（矩阵），由照片上的信息将它填满。 分辨率：本来是用来描述单位长度的像素点的。用PPI或者DPI更准确。但是现在一般都混用，一般用长宽的像素点个数来表示。 屏幕分辨率：1280p720p指的就是长有1280个像素点，宽有720个像素点，一张1280 720照片就可以填满屏幕，更大就需要滚轮了。 照片分辨率：1280p*720p,指的就是这张照片长有1280个像素点，宽有720个像素点 照片如何显示: 照片的尺寸=照片的像素/显示器的ppi 照片放大：本来10英寸，抢先拉大到20，那么显示器的有些像素点就填不满，所以就不清楚了。]]></content>
+      <categories>
+        <category>其他</category>
+      </categories>
+      <tags>
+        <tag>分辨率</tag>
+        <tag>像素</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[尝试用AE做年会视频]]></title>
+    <url>%2F2017%2F01%2F01%2F%E5%B0%9D%E8%AF%95%E7%94%A8AE%E5%81%9A%E5%B9%B4%E4%BC%9A%E8%A7%86%E9%A2%91%2F</url>
+    <content type="text"><![CDATA[最近需要帮组里的年会做个视频，需要用到AE，之前完全没有接触过，前前后后做了一个星期，最终通过套模板+学习教程也算是交差了。现在小小总结一下，以后可能也用的到。 AE的基本单位是合成，所以最好把每个模块都做成合成的形式。 视频的编码和格式： 编码:一般指的是压缩的方式，如H.264，MPEG-4等，这个直接影响视频的大小。视频先编码，播放的时候再由相应的解码器来解码。我做了个实验，将做好的视频再用tar等方式压缩大小不变，因为已经压缩过了。 格式：如mov,avi等，这个值得是视频的打包方式，因为视频一般还包括音频，等其他信息，这个格式值得就是视频的组织方式。 输出格式：AE渲染的视频都非常大。这里可以调小的话一般可以选择： H.264/MPEG4,而不是无损 调节尺寸，可以选择720p等，一般不建议，因为这样放到显示器上无法铺满屏幕,现在屏幕的分辨率都很高了。 快捷键 command+shift+d 切割视频 command+x 删除 command+i 插入素材 command+k 修改时长 右键-&gt;time stretch: 快进放慢 左下角三个键前两个点灭： 调节时间轴面板]]></content>
+      <categories>
+        <category>其他</category>
+      </categories>
+      <tags>
+        <tag>AE</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Vim中的常见操作]]></title>
+    <url>%2F2017%2F01%2F01%2FVim%E4%B8%AD%E7%9A%84%E5%B8%B8%E8%A7%81%E6%93%8D%E4%BD%9C%2F</url>
+    <content type="text"><![CDATA[几种模式 Normal模式：按Esc进入 Insert模式：按i进入 Visual模式：按v进入 Vim 中复制粘贴： 选中，然后右键，这种缺点会将行号也复制进去 Visual模式下，用上下箭头选中，然后按y复制，按p粘贴 Normal模式下，输入row1,row2+y，表示复制从row1到row2的行，然后找到指定位置按p粘贴 vim 中复制粘贴（简单方法） yy + p :复制一行粘贴 set mouse=v : 然后选择即复制，可以在任何地方粘贴（强烈推荐） set paste:解决从其他地方粘贴过来乱码的问题 dd: 删除某一行 G: 跳到末尾，gg:跳到开头 fn+home:跳到一行开头 fn+end: 跳到一行末尾 %s/word1/word2/g:批量将word1替换成word2,%表示全文搜索，g表示全文替换，转义字符是\ set mouse=: 表示只在 模式下使用鼠标功能。使用鼠标功能的话vim的光标会随着鼠标移动，但是缺点是无法复制。默认情况下set mouse=a，无法复制。set mouse=v的话，也就是只在v模式下使用鼠标功能，其他模式下则可以右键复制。 批量缩进： visual模式下 &gt; &lt;号]]></content>
+      <categories>
+        <category>Vim</category>
+      </categories>
+      <tags>
+        <tag>Vim</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[面试经典编程题]]></title>
+    <url>%2F2016%2F11%2F25%2F%E9%9D%A2%E8%AF%95%E7%BB%8F%E5%85%B8%E7%BC%96%E7%A8%8B%E9%A2%98%2F</url>
+    <content type="text"><![CDATA[1：给定一个字符串，删去几个字符，使其成为回文串，求最少要删去几个字符A：reverse字符串，求两个字符串的最长公共子序列为len,总长度减去len就是结果 2：求最长回文子序列A: reverse字符串，求两个串的最长公共子序列 3：最长回文子串 A:以一点为中心向外拓展法 4：reverse链表 (I,II)reverse Ireverse II 5：各种排序，冒泡，插入，选择，归并，快排，堆排序查看链接 6：最大子数组和(dp)查看代码 7：编辑距离问题查看代码 8：将一个字符串中的大写字母挪到后面去，相对位置不变，如将aAbcBd变成abcdAB A:类似冒泡排序，大写字母依次浮动到后面 查看代码 9: 给一个数组，求一个子区间，满足该区间的最小值*区间和最大，输出这个最大和的值和对应的区间(@今日头条)。 暴力的解法是以枚举每个元素，以该元素为最小值向两边拓展，复杂度o(n^2) 正确的解法：这是一道单调栈的典型例题，用单调栈来做复杂度o(n)。代码 所谓的单调栈就是维护一个栈，从栈底到栈顶递增。维护方法：数组元素依次入栈，比栈顶元素小就pop，知道插入合适的位置中。 需要注意：用到栈的时候，自已用数组模拟比stl快很多，因为stl的push，top都是函数，数组模拟不是。 10：给一个二维平面上的集合，求所有符合要求的点，该点满足：其他点的x和y不能同时&gt;它。也就是说不存在一个点，在它的右上方。A: 设struct {int x,int y}.对结构体数组按照x的大小排序，然后从后往前遍历，期间维护一个最大的Y，如果某个点的y大于等于Y，则该点满足条件。 11： 有一个随机函数A以p的概率返回0,(1-p)的概率返回1，设计一个函数，该函数以1/2的概率返回0和1?A: 一开始证明这个算法的我是将random函数调用i次返回0的概率相加，然后算等比数列的和是1/2后来想想不管调用几层返回结果，每一层返回0和1的概率总是一样的。所以最终返回0和1的结果也是一样的。【二项分布】。 123456789101112131415161718 int random()&#123; while(true)&#123; int i=A(); int j=A(); if(i==0&amp;&amp;j==1)&#123; return 0; break; &#125; if(i==1&amp;&amp;j==0)&#123; return 1; break; &#125; continue; &#125; &#125; ``` * 12 统计单词个数： * 这道题本来非常简单，但是由于我在dennis ritchie的书上看到一种解法非常优雅，记录一下，常规做法要去掉两边的空格，这种解法不用。 while(getline(cin,str)){ int state=0,count=0; //state=0表示当前状态不在一个单词中 string str; int len=str.length(); for(int i=0;i&lt;n;i++){ if(str[i]==&apos; &apos;||str[i]==&apos;\t&apos;||str[i]==&apos;\n&apos;){ state=0; } else if(state==0){ count++; state=1; } } cout&lt;&lt;count&lt;&lt;endl; } ``` 数组右移k位:(就是把数组后面的k个挪到前面来) 1,2,3,4,5,6 -&gt; 5,6,1,2,3,4 时间o(n)，空间o(n): 先把后面的k个存起来temp，然后再赋值给a的前面 时间o(n*n)，空间o(1)：每次右移一个 时间o(n),空间o(1): 整体reverse,前k个reverse,剩下的reverse]]></content>
+      <categories>
+        <category>面试题</category>
+      </categories>
+      <tags>
+        <tag>面试</tag>
+        <tag>编程题</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[linux基础知识]]></title>
+    <url>%2F2016%2F11%2F14%2Flinux%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%2F</url>
+    <content type="text"><![CDATA[12345678910文件的类型 linux windows二进制文件 .o .obj静态链接库 .a .lib动态链接库 .so .dll可执行文件 .out .exe文件的格式 ELF PE//二进制文件有叫目标文件，每个.c文件编译后产生的//静态链接库是很多目标文件的集合 linux可执行文件结构: elf, windows:PE ,macos: mach-o(值得注意的是，压缩文件在mac上先解压在压缩后在linux下再解压就打不开了,所以copy一般都是tar.gz文件) 有时程序显示无法load .so 文件,跟环境变量无关，系统加载环境变量一般在/usr/lib中找，如果要改的话1.将so文件移到/usr/lib中。2.设置软链接，链接到/usr/lib中3.修改/etc/ld.so.conf文件，加入自己的路径 gcc编译命令： -c 只编译，不链接，生成.o -o 生成目标文件，加上-c生成的就是只编译后的目标文件,不加-c生成的就是编译+链接后的目标文件,.o,.so,.a,.out都是目标文件。 -fPIC 一般都加上 生成.o: gcc -c test.c 生成.so: gcc -shared -o test.so test.c 生成.a: gcc -o test.a test.c 生成.out: gcc -o test.out test.c 调用动态库：-lpthread -ldnet(glic的库），gcc test.c ./test1.so 直接一起编译]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[gdb命令总结]]></title>
+    <url>%2F2016%2F11%2F03%2Fgdb%E5%91%BD%E4%BB%A4%E6%80%BB%E7%BB%93%2F</url>
+    <content type="text"><![CDATA[list+行号(函数名)：查看某一行(函数)的代码 break+file.c:行号: 在某个文件设置断点，如果只有一个文件则不需要 条件断点：break test.c:34 if count&gt;50,一般用在循环中设置断点 start: 停在main函数第一条 run(r): 开始运行，停在断点处 continue(c): 继续运行，停在下一个断点 next(n): 单步执行 until+行号: 继续运行，直到某一行停止 p : 查看变量 step(s): 进入函数 quit(q): 退出gdb info threads: 显示所有线程信息 gdb调试带参数的程序如main： gdb main ，r a b c ，abc为参数 bt: backtrace,打印当前的函数调用栈信息 ctrl+a+x: 上方显示源代码，下方gdb调试]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>gdb命令</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Leetcode常用技巧]]></title>
+    <url>%2F2016%2F11%2F03%2FLeetcode%E5%B8%B8%E8%A7%81%E6%8A%80%E5%B7%A7%2F</url>
+    <content type="text"><![CDATA[return NULL和return 一个空的数组不是一回事 unordered_set 和unordered_map和map,set的区别在于前者内部实现是hash，后者是红黑树 常见STL： string: push_back()，pop_back()，+，length()，empty()，s.append(n,c); vector: push_back()，pop_back()，size()，empty()， vector vector1; vector vector1(n);//包含n个默认初始化的值 vector vector1(n,val); //包含n个数，默认值val vector vector1(vector2); vector vector1=vector2; vector vector1{1,2,3,4,5}; vector vector1={1,2,3,4,5}; queue: pop，front，size()，empty()， 经常需要用到匿名对象：比如 vector\ vec(m,vector(n,false));]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>leetcode</tag>
+        <tag>stl</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[c语言gets和scanf的区别]]></title>
+    <url>%2F2016%2F11%2F03%2Fc%E8%AF%AD%E8%A8%80gets%E5%92%8Cscanf%E7%9A%84%E5%8C%BA%E5%88%AB%2F</url>
+    <content type="text"><![CDATA[今天在写项目的时候遇到了读入不定字符串的问题，涉及到scanf和gets的区别，之前在这个问题上一直没有彻底弄懂，现在总结下。 二者在读入字符串时都会在后面加上\0 scanf在遇到空格，回车，tab的时候停止输入，并且将这些（空格，回车，tab）留在输入缓冲区中。 gets遇到回车会停止输入，并且清空输入缓冲区 scanf发现缓冲区有空格，tab,回车会跳过这些继续等待输入 gets,getchar等遇到缓冲区有空格，tab，回车会读入，然后清空缓冲区。 值得一提的是，二者都是不安全的，容易读入恶意代码被攻击。然后在具体的应用中，比如读入未知个数的int,string等,ctrl+z结束（linux下ctrl+d） 1234567891011121314while(scanf(&quot;%s&quot;))&#123;&#125;--------------------------while(gets(str))&#123;&#125;---------------------------scnaf(&quot;%d&quot;,&amp;a);getchar(); //读入缓冲区遗留的回车gets(str);]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c语言</tag>
+        <tag>gets</tag>
+        <tag>scanf</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[linux命令]]></title>
+    <url>%2F2016%2F10%2F24%2Flinux%E5%91%BD%E4%BB%A4%2F</url>
+    <content type="text"><![CDATA[查用法： man+命令(man中搜索用/,vim同) 读懂man 命令：–跟单词，-跟字母，[]表示可选，[-z,–gzip]实际上是一个参数，不同写法。 grep: golbal search regular expression and print 查看版本信息： lsb_release -a /表示根目录，~表示HOME目录 复制文件夹 ： copy -r 查看端口占用情况 ： netstat -antp | grep 8080 查看网卡对应网络：networksetup -listallhardwareports 查看进程占用信息： top 杀死某进程 ： kill -9 pid 打包压缩： tar -zcvf test.tar.gz /temp 解压： tar -zxvf test.tar.gz 查看进程信息 ： ps -ef | grep “” 全盘搜索某文件： locate+文件名 设置软链接 ：ln -s src dst(必须完整路径，如ln -s /home/a.cpp /usr/lib/a.cpp),删除按照普通文件处理就行 查看动态链接库： ldd+程序名（完整路径，环境变量无效，不知道为什么） 查看可执行文件位置： whereis 模拟tcp,ip通信神器：nc 捕获包：tcpdump 搜索历史命令： ctrl+r 搜索指文件夹中的字符串： grep -rn keyword ./ 表示递归搜索当前目录下的所有文件 远程传送文件：scp -P port file root@ip:/home/ 远程登录： ssh root@ip -p port,如果不想每次都输入密码，可以配置一下公钥登录，具体教程 退出ssh：exit 追加文件：cat file1&gt;&gt;file2 将file1追加到file2 构造自己的命令：alias str=’command1;command2’,多条命令依次执行的时候，&amp;&amp;遇到错误会停止，;遇到错误会跳过 grep -r “ “ ./ –color:搜索文件内容，将搜出来的内容标红 find ./ -name test.c: 递归查找文件或文件夹 tail -f file：监控文件的输出 ctrl+a :光标移到行首 ctrl+e:光标移动到行尾 wc -l:统计文件函数，常用来配合|管道命令来用 sed: 批量替换文件 git diff file1 file2:diff两个文件 awk: 强大的文件处理工具,会将文件按照分行，并且每一行按照空格分开，如awk ‘{print $14; print $4}’ data.20170516 | less.表示分行输出每一行的第4个和第14个变量。 chown:change owner,改变文件的所有者。 sudo chown -R $(whoami) ./ 将当前目录的所有文件(递归) 的拥有者都改成当前用户 chmod: change mode，改变文件的属性(可读，可写，可执行) chmod u+x,g+x,o+x file1，将file1增加可执行权限，u:拥有者，g:用户组，o:其他用户，a:所有用户 chmod 777 file2 sed -n ‘5,10p’ filename: 显示5-10行]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>linux命令</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[计网学习笔记]]></title>
+    <url>%2F2016%2F10%2F24%2F%E8%AE%A1%E7%BD%91%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%2F</url>
+    <content type="text"><![CDATA[七层协议中，上一层对下一次是封装好的，比如tcp头，ip头对数据链路层来说都是一样的，都当成普通的报文来处理。 在arp协议解析的时候，主机和路由器地位是等价的，主机(路由器)发送广播，ip符合条件的主机(路由器)接收消息，发送个回应，从而让发送方确定目的地址的mac地址。所以在硬件层面，不管是主机还是路由器，都是通过mac地址发送的。 arp表，存在电脑中，是当前局域网内ip和mac地址的对应表，一般来说，是通过ip查到mac地址，查不到才用到上面所说的确定mac地址，确定后就记录到当前的arp表中。 内网，外网，一般来说ipconfig查到的都是内网ip，转换成外网ip要经过NAT地址转换,判断内网ip的方法是：10.xxx.xxx.xxx192.168.xxx.xxx172.16.0.0-172.31.255.255 主机或者路由器在转发的时候先查route表，再查arp表先把目的ip和mask做&amp;，然后选择路由eg1: 10.0.6.86, 符合第三条，Flags没有G，就是没有网关(属于同一局域网)，从eth0(网卡接口，一台计算机可能有多个网卡)出;然后再查arp表，找到了就直接发走，找不到发送广播(从eth0口)找到目的主机，再发出去。eg2: 10.0.6.203，这个比较特殊(localhost优先级高)通过lo发到本地环回eg3: 匹配不到，选择default网关，从eth0口出，然后网关再负责转发，网关就是局域网的出口。 在手动设置网络时，需要设置ip,子网掩码，dns地址，默认网关。 子网掩码：不用设置，按照DHCP的设置，因为DHCP表示的是这个局域网的大小，你没法改变。比如说一个路由器下的局域网的子网掩码为255.255.255.0，表示这是一个C类地址，子网内有255个主机。 ip和默认网关，这个可以改，但是需要在一定的范围内改，先用默认网关&amp;子网掩码，可以得到网段，这部分你不能改，你只能改后面的主机。比如默认网关为192.168.1.1,子网掩码为255.255.255.0,则网段为192.168.1.x;x可以从0-255之间你随便改。 NAT地址转换: 根据dst_ip区分 dst ip+src port区分 需要对src_ip也做一个nat 参考资料 http：url和uri的区别： url: universal resource location,我们通常见到的链接都是,url是uri的一种 uri: universal resource identifier,能够标识一个东西的很多，不一定是url]]></content>
+      <categories>
+        <category>计算机网络</category>
+      </categories>
+      <tags>
+        <tag>arp</tag>
+        <tag>网络</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[markdown语法,长期更新]]></title>
+    <url>%2F2016%2F10%2F24%2Fmarkdown%E8%AF%AD%E6%B3%95-%E9%95%BF%E6%9C%9F%E6%9B%B4%E6%96%B0%2F</url>
+    <content type="text"><![CDATA[插入空格:&amp;nbsp+;前后留出空格出来 !()[path]:插入图片 &lt;&gt; 插入超链接,直接将网址括起来，注意加http []+():插入链接，[]里是显示文字，()里是link,+要去掉 空格： 全角下两个空格 #+空格是一级标题，##+空格是二级标题，etc 星号+空格是一级目录，tab+星号+空格是二级目录，2tab+星号+空格是三级目录，etc ```（+语言） 是插入代码(高亮)，1左边的那个键 下划线打不出来，需要转义，\加_即可]]></content>
+      <categories>
+        <category>hexo</category>
+      </categories>
+      <tags>
+        <tag>markdown</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[git教程]]></title>
+    <url>%2F2016%2F10%2F24%2Fgit%E6%95%99%E7%A8%8B%2F</url>
+    <content type="text"><![CDATA[git 的结构： 工作区：也就是我们平时看到的文件 暂存区：git add之后将改动存到暂存区 本地版本库： 分支信息 关于暂存区： git commit 之前都是不与具体分支关联的，举个例子，master与dev都是最新的，在dev分支修改某文件，添加到暂存区，然后切换到master分支去提交，这个提交算master分支的。 git checkout branch: git checkout 会用本地版本库中的分支替换工作区的内容。具体来说，当你执行git checkout 时，git 会判断切换分支和当前分支的关系，如果都是最新的，则工作区不变，暂存区也不变。就如上面的例子，没提交之前dev和master是一样的，所以checkout master时工作区不变。 checkout master时，如果dev和master不同，就会用master来替换工作区，同时清空暂存区，如果暂存区有在dev分支修改的文件，系统就会提示暂存区会清空，dev分支的修改无效，可以选择commit 或者stash。 git add git add是将工作区的文件保存到暂存区，最好养成习惯，git add ,git commit -m ‘’,不要直接git commit -a -m ‘’。因为git add可以分批次添加到暂存区。 git merge: merge冲突： 冲突原因：开始master和dev相同，后来master修改了A文件的第n行，dev修改了A文件的第 建立本地仓库—&gt;修改本地文件—&gt;commit到本地git—&gt;sync到远程git commit: 提交到本地git仓库sync(push): 同步到远端git仓库pull request(pr): 将自己的分支merge到另一个分支fork: 复制别人的仓库并创建一个branch(分支)pull: 将你fork的仓库中的同步到本地git中clone: 将自己远端git的项目(fork或自己建的)复制到本地git上 注意： commit 之后要sync 多人共同修改某个项目，为了避免冲突，最好先pull，同步一下最新的版本再提交自己的代码 在实际项目中，一般常用的git 操作一般为： git clone: 克隆一个仓库 git branch: 查看本地分支 git branch -a: 查看所有分支，本地和远程 git fetch: 取回所有分支的更新 git branch –set-upstream-to=origin/dev git branch -d 本地分支：删除本地分支 git difftool 分支1 分支2：用ksdiff查看diff git stash: 暂存不提交本地的改变 git checkout -b 本地分支:新建一个本地分支并切换 git commit -a -m ‘fix bugs’ git push 远程主机名 本地分支: refs/for/远程分支名(refs/for表示评审) 初始化一个分支的时候一般： git push -u origin master,表示设置默认主机为origin,没有远程分支会新建一个并且建立追踪关系，以后直接git push就行了。 git push -u 远程主机名 本地分支 ：-u 设置默认主机 git config –list查看git配置信息 git branch -vv:查看分支对应关系 git 不支持上传空目录，所以一般上传空目录的时候要在里面添加一个无用的文件.gitignore]]></content>
+      <categories>
+        <category>计算机基础</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
+        <tag>github</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[java语言基础，长期更新]]></title>
+    <url>%2F2016%2F10%2F20%2Fjava%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%EF%BC%8C%E9%95%BF%E6%9C%9F%E6%9B%B4%E6%96%B0%2F</url>
+    <content type="text"><![CDATA[0.eclipse操作技巧：ctrl+变量： 查看定义ctrl+7 批量注释 1.命名规范：包名： cuiyiming类名/变量名： CuiYiMing方法名：cuiYiMing常量名：CUI_YI_MING 2.大括号： 第一个不换行 2.main 函数：只能是 public static void main(String[] args)形式，public 表示函数可以访问，static 表示 属于这个类，不需要new 对象,void 表示没有返回值，因为不知道返回值给谁。所以强制规定没有。 3.import 类似于c#中的namespace,逻辑上对类进行组织和管理。 4.java 访问权限:public protected default private修饰类：public default修饰成员变量和函数： public protected default private判定一个函数能否访问，先通过类修饰符，再通过函数修饰符，两重判定 5.static :静态量，属于类，存在静态存储区，编译时分配内存。特点：静态方法只能调用静态变量。原因：非静态量调用时必须要有this指针，但是静态方法显然不能为他提供this 指针。]]></content>
+      <categories>
+        <category>java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[c语言基础，长期更新]]></title>
+    <url>%2F2016%2F10%2F20%2Fc%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%EF%BC%8C%E9%95%BF%E6%9C%9F%E6%9B%B4%E6%96%B0%2F</url>
+    <content type="text"><![CDATA[include” “ 的话编译器环境首先会在你当前所在的目录来找寻头文件，当所在目录没有的话，它就会到标准头文件库来找，找不到就报错，&lt;&gt;的话它一开始就到标准头文件库来找，找不到就报错！ 典型错误 123if(ret=fun()!=0) //典型的错误做法，因为赋值优先级最低，正确写法是if((ret=fun())!=0) strlen和sizeof区别 123char str[16]=&quot;abcd&quot;sizeof(str)=16; //运算符strlen(str)=4; //函数 static 和extern的用法 static 位置在内存的全局变量区 static + 全局变量表示该变量只能在该文件中用，其他文件中即使加了extern也不好使。 static + 函数表示该函数只能在该文件中用 static + 局部变量，变量作用域不变，但是生存周期直到程序结束，所以变量实际只有一份。 extern extern + 全局变量，该变量在该文件中并没有定义，只是告诉编译器链接的时候去其他文件中去找。 举个例子: errno的原理就是这样 12extern int errno; //只是声明, 在&lt;errno.h&gt;中strerror(errno);// errno在其他文件中定义 extern “C”,当希望cpp的代码按照c的符号表去编译时(即希望该cpp被C代码调用),需要加上这个。详细说明 12345678#ifdef cplusplusextern &quot;C&quot;&#123;#endif//这里写你自己要用c的方法编译的代码//之所以把ifdef拆成两个来写主要是为了好看。。。#ifdef cplusplus&#125;#endif 关于函数的声明和定义： 函数的声明主要是C语言本身的缺陷，即一遍扫描。函数声明的作用：告诉编译器我有这个函数，你下面用到的时候不要告诉我找不到这个函数。 声明和定义的参数和返回值不同编译不过去。 符号表的生成：函数定义的时候才生成符号表，C语言的符号表只和函数名有关，C++的符号表和参数和返回值都有关，这就是所谓的函数重载。 符号表的作用：链接的时候用，比如你调用其他文件的函数，你只需要包含它的头文件就可以编译过去，链接的时候根据函数名去符号表中去查，找到符号表对应的函数的地址。 可以用nm命令查看符号表。 int main(int argc,char** argv),其中argv[0]是程序完整路径，所以argc总是比实际输入的参数多1 多个if特别容易出错，要注意。加个else养成习惯 123456if(temp&gt;min)&#123; min=temp;&#125;if(temp==min)&#123; //典型错误，第二个if不该执行&#125; #progama once 一般自己写头文件的时候用，这个保证了编译的时候该头文件只会被打开一次。 关于相对路径的问题： 一般情况：当前路径指的是该程序所在的路径，如 fragroute a.txt. 那么如果txt文件中有打开其他文件，用的是相对路径，那么当前路径就是fragroute所在的路径 编译头文件的时候：头文件经常包含其他头文件，用的是相对路径，那么当前路径指的就是该头文件所在的路径。 在网络编程中经常遇到字节序和网络序的问题（大端，小端），有些还有位域的问题。从程序员的角度来说：其实不用管具体的原理，对于多字节来说，发送和接收用htonl(),nltoh()就行，位域的问题，只要定义了大小端之后就按照正常的结构体成员来用就行。具体的原理可以参考：点我查看原理 C 语言文件操作写入文件时，有时程序意外终止，文件并没有写入，这是因为读写缓冲区的存在。解决方法：每次fprintf之后，fflush清空缓冲区，立即写入。 linux下经常遇到很多格式的数不知道输出格式，如u_int32_t这种，可以用IntTypes.h这个头文件。 calloc和malloc的区别：calloc申请的内存会初始化为0,malloc不会初始化。 system(“cmd”)可以在代码中执行linux命令 返回值：void表示没有返回值，void* 表示返回一个无类型的指针。]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c/c++</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[并行，并发和锁]]></title>
+    <url>%2F2016%2F10%2F20%2F%E5%B9%B6%E8%A1%8C%EF%BC%8C%E5%B9%B6%E5%8F%91%E5%92%8C%E9%94%81%2F</url>
+    <content type="text"><![CDATA[并行：多个处理器，从硬件角度真正意义的同时进行多线程：只是逻辑上的并行，同一时刻还是只有一个线程发生并发：并行和多线程都叫并发 关于锁：不管并发并行，只要存在共享内存，就要考虑加锁的问题。 锁的实质：都是通过阻塞线程实现的(一个线程申请锁未释放，另一个锁再申请就会线程就会阻塞)，区别就是这个锁作用的范围，是否多个进程可以共享这个锁。 几种锁的区别:（都是阻塞线程） semphore:信号量，多个进程之间也可以用，多用于共享内存 mutex: 互斥锁，多个进程之间不能用，阻塞的，由操作系统唤醒。 自旋锁：和互斥锁相似，区别就是不是阻塞的，不是休眠然后被操作系统唤醒，而是自己占用cpu，一直查询锁是否被释放 dpdk自带的读写锁：rte_write_lock: 该锁被申请后，其他线程不能读也不能写rte_read_lock: 该锁被申请后，其他线程不能写写时独占，读时共享 =&gt; 写的时候加写的锁，读的时候加读的锁。]]></content>
+      <categories>
+        <category>操作系统</category>
+      </categories>
+      <tags>
+        <tag>多线程</tag>
+        <tag>锁</tag>
+        <tag>并发</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[c++基础,长期更新]]></title>
+    <url>%2F2016%2F10%2F20%2Fc%2B%2B%E5%9F%BA%E7%A1%80-%E9%95%BF%E6%9C%9F%E6%9B%B4%E6%96%B0%2F</url>
+    <content type="text"><![CDATA[今天在写操作系统的作业，发现c++的很多基本语法都忘了，现在自己把基本语法总结一遍。方便以后复习。 1.构造函数： 父类构造函数 -&gt; 类成员的构造函数 -&gt; 自己的构造函数 2.初始化列表： 这里有个博客挺好 http://www.cnblogs.com/graphics/archive/2010/07/04/1770900.html 我的总结： 12Test1 test1 ; Test2(Test1 &amp;t1):test1(t1)&#123;&#125; 12345Test1 test1 ; Test2(Test1 &amp;t1) &#123; test1 = t1 ; &#125; 第2种test1需要执行一次默认构造函数+一次赋值操作第1种test1只需要执行一次拷贝构造函数 特别的：下面情况只能用初始化列表 类成员没有默认构造函数 类成员是引用类型（只能初始化，不能赋值） 类成员是常量（只能初始化，不能赋值） 多个初始化列表，不是按初始化列表顺序，而是按声明顺序 结论： 尽可能用初始化列表 初始化列表顺序和声明顺序一致 3.extern 外部的，extern 只是起一个declare作用，可以用来修饰变量和函数，表示该函数的定义在其他模块中，也就是说，如果你在a.cpp文件中定义a=1;在b.cpp文件中声明extern a;则可以引用a.cpp中的a。 4.#ifdef表示条件编译 5.#define 和 typedef的区别：define预处理，无脑替换typedef是别名，不一样。define INT inttypedef int INT则 INT a,b:typedef: int a,b: a,b都是intdefine: inta,b : a是int，b是int 5.类的定义 关于默认构造函数(没有参数)，如果类中未定义任何构造函数，编译器会提供一个默认的构造函数，**如果类中定义了任何了构造函数，编译器不会提供默认构造函数。 12345678910class Test&#123; int a; int b; Test(int a,int b)&#123; &#125; Test()&#123; &#125;&#125; 局部变量： Test a1; Test a2(1,2);如果调用默认构造函数，不用加括号； new 对象：Test p1=new Test(), p2=new Test(10,20);必须加括号，调用默认构造函数也要加括号 匿名对象：vector.push_back(Test()),vector.push_back(Test(10,20))必须加括号 关于lambda表达式：我觉得可以理解成一个匿名函数，通常用到需要传递函数指针做参数，而函数本身又比较简单的情况，比如sort函数的cmp函数。 格式： [capture list]（parameter list）-&gt; return type {function body} capture list: 捕获列表,一般为空，表示可以在lambda表达式中用所在函数中局部变量的值。如[a,&amp;b]表示捕获a,b其中b为引用。当然还有其他的隐式捕获的用法，具体见c++ prime page 352 parameter list: lambda的参数 return type: 需要注意的是，如果函数体内只有一句return语句，则可以省略return type; 否则默认返回类型是void，如果返回的不是void，则需要加上具体的返回类型。 例子： 1sort(vector1.begin(),vector1.end(),[](int a,int b)-&gt;bool&#123;return a&gt;b&#125;) c++的STL中的类型不能为引用，如vector是绝对错误的]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c/c++</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Hello,hexo]]></title>
+    <url>%2F2016%2F10%2F19%2FHello-hexo%2F</url>
+    <content type="text"><![CDATA[听实验室的师兄说，面试的时候如果有自己的博客或者github，是很好的加分项。我想起了被我丢弃很久的csdn博客，可是csdn还是太乱了，加上自己一直就想自己搭建个自己的博客，然后这几天也没有什么事情，所以就花了一天的时间来利用hexo+github弄了个自己的博客。以后要坚持写博客，恩，一定。 几个坑： hexo new 等命令要在hexo_blog目录下进行 文件命名的时候要加上后缀，否则引用文件的时候找不到 public是你部署到网站上的东西 有时候修改完了之后并没有改变，可能需要删掉public相应的模块重新生成 有时候图片加载不出来，右键查看链接，将图片加到对应的目录中即可 参考的博客：http://maoxiangyu.com/Hexo/%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA%E6%8C%87%E5%8D%97-Next/ hexo官网：https://hexo.io/zh-cn/docs/writing.html]]></content>
+      <categories>
+        <category>hexo</category>
+      </categories>
+      <tags>
+        <tag>hello hexo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[c语言的指针易错点]]></title>
+    <url>%2F2016%2F10%2F19%2Fc%E8%AF%AD%E8%A8%80%E7%9A%84%E6%8C%87%E9%92%88%E6%98%93%E9%94%99%E7%82%B9%2F</url>
+    <content type="text"><![CDATA[1.今天在做项目的时候被c语言的指针坑了很久。现在总结一下：**：划重点，c语言中没有引用，所有的参数传递都是值传递。这一点在函数传出值(改变函数外的变量)的时候特别明显，想传出一个值就要传入一个指针(它的地址)，然后通过这个它的地址来改变它的值。 1234567891011void a; //传出一个值func(&amp;a);void func(void * ptr)&#123; *ptr=value;&#125;void * a; // 传出一个值(指针类型)func(&amp;a);void func(void** ptr)&#123; *ptr=value;&#125;]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c语言</tag>
+        <tag>指针</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Linux/Windows环境变量那些事]]></title>
+    <url>%2F2016%2F04%2F11%2FLinux-Windows%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%82%A3%E4%BA%9B%E4%BA%8B%2F</url>
+    <content type="text"><![CDATA[变量：相当于别名，举个例子：linux 中，HOME就是一个变量，它一般指的是/home/leo,leo是我的用户名。变量名不能单独出现,必须加上 “美元符”(linux)或%%(windows)表示引用它的值。在linux中: 可以通过echo $HOME查看变量的值在windows中： echo %HOME% 环境变量：path ,path实质上是一种特殊的变量。它等于一系列路径（windows用;隔开,linux用：隔开）。Linux的命令实质上就是在执行程序，执行程序时，系统会到当前目录寻找程序路径，找不到就到环境变量对应的路径中去寻找环境变量的作用是当执行或者链接某个程序的时候，不需要切换到具体的目录下在执行。 顺便说一下：命令行中执行某个程序，只要写出路径即可，之前我还一直以为./是执行的意思呢，真是too young!!update:今天才发现要想执行某程序：1.输入完整路径 如/home/leo/test2.输入当前目录 ./test ,在当前目录下只输入test 是不行的。3.只输入文件名，这种要求必须设置环境变量 那么怎么设置环境变量呢？windows: 直接搜索“环境变量”，在path路径下添加要添加的目录(不要忘记;)linux下，在/etc下找到profile文件，用gedit 打开，export PATH=自己路径：$PATH，保存 linux还有一个命令：aliasalias看起来仿佛跟变量很像，其实是不同的。alias可以看成是一种批处理，它可以将一个或多个命令重命名为一个命令。alias: 查看alias内容alias test=”cd /home;ls;” ，可以将一系列命令命名成一个。(临时命名，当前窗口有效)如果想永远命名：在home/leo中找到.bashrc文件，然后找到alias部分，添加自定义命名，如alias test=”cd /home;ls;”那么可能有人问？怎么在windows中实现alias呢，可以通过批处理实现。举个例子，在windows中想用ls,就可以创建ls.bat,内容为dir. 然后ls就可以用了。tips: alias 后面可以跟参数。bat文件后面好像不可以跟参数。]]></content>
+      <categories>
+        <category>操作系统</category>
+      </categories>
+      <tags>
+        <tag>环境变量</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Windows/Linux进程控制实验]]></title>
+    <url>%2F2016%2F04%2F11%2FWindows-Linux%E8%BF%9B%E7%A8%8B%E6%8E%A7%E5%88%B6%E5%AE%9E%E9%AA%8C%2F</url>
+    <content type="text"><![CDATA[最近做了操作系统的实验，进程控制，踩了不少坑。现在总结下。Liunx：先放代码 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748#include&lt;iostream&gt;#include&lt;cstdlib&gt; //sleep()#include&lt;unistd.h&gt; //fork#include&lt;sys/time.h&gt; //gettimeofday#include&lt;sys/wait.h&gt; //wait#include&lt;ctime&gt; //localtimevoid outputTime(struct tm*time,int ms);using namespace std;int main(int argc,char*argv[])&#123; struct timeval startTime; struct timeval endTime; struct timezone zone; time_t startTime_t; time_t endTime_t; struct tm *startTime_tm; struct tm *endTime_tm; int pid=fork(); if(pid&lt;0)&#123; cout&lt;&lt;&quot;error&quot;&lt;&lt;endl; exit(0); &#125; if(pid==0)&#123; //子进程 execvp(argv[1],NULL); cout&lt;&lt;&quot;execv error!&quot;&lt;&lt;endl; exit(0); &#125; if(pid&gt;0)&#123; //父进程 gettimeofday(&amp;startTime,&amp;zone); wait(0); //等待子进程结束 gettimeofday(&amp;endTime, &amp;zone); long long int durtion=(endTime.tv_sec-startTime.tv_sec)*1000+endTime.tv_usec-startTime.tv_usec; startTime_t=(time_t)startTime.tv_sec; //转换成time_t格式 endTime_t=(time_t)endTime.tv_sec; startTime_tm=localtime(&amp;startTime_t); //转换成struct tm格式 endTime_tm=localtime(&amp;endTime_t); cout&lt;&lt;&quot;The start time is: &quot;; outputTime(startTime_tm,startTime.tv_usec/1000); cout&lt;&lt;&quot;The end time is: &quot;; outputTime(endTime_tm,endTime.tv_usec/1000); cout&lt;&lt;&quot;the durtion is &quot;&lt;&lt;durtion&lt;&lt;&quot;ms&quot;&lt;&lt;endl; &#125; return 0;&#125;void outputTime(struct tm*time,int ms)&#123; cout&lt;&lt;(*time).tm_year+1900&lt;&lt;&quot;/&quot;&lt;&lt;(*time).tm_mon+1&lt;&lt;&quot;/&quot;&lt;&lt;(*time).tm_mday&lt;&lt;&quot; &quot;&lt;&lt;(*time).tm_hour&lt;&lt;&quot;:&quot;&lt;&lt;(*time).tm_min&lt;&lt;&quot;:&quot;&lt;&lt;(*time).tm_sec&lt;&lt;&quot;:&quot;&lt;&lt;ms&lt;&lt;endl;&#125; 几个坑：1.之前一直不知道主函数要什么参数，这下知道了。主要是在命令行运行中可能需要传入参数。比如启动一个子进程。 每个函数对应的头文件要搞清楚。3.execvp: exec类的函数都是杀死现有进程，用新进程代替，进程号不变。但是execvp()，可以识别环境变量，其他不可以。换句话说：如果传入参数是有环境变量的，而且用的是execvp()，那么只传函数名是可以的。两个条件缺一不可。4.wait(0)可以，wait(NULL)本来应该是可以的，但是不知道为什么在linux中不可以。 windows: 123456789101112131415161718192021222324252627282930313233343536373839404142434445#include&lt;iostream&gt;#include&lt;string&gt;#include&lt;windows.h&gt;using namespace std;void outputTime(SYSTEMTIME&amp;time);int getDurtion(SYSTEMTIME&amp;startTime, SYSTEMTIME&amp;endTime);int main(int argc, char* argv[]) &#123; //L表示unicode编码，c++和java不同，内部可能有几种编码，烦。。 SYSTEMTIME startTime; //LP表示指针的意思 SYSTEMTIME endTime; GetSystemTime(&amp;startTime); STARTUPINFOA si; //后面有A表示char,否则是wchar PROCESS_INFORMATION pi; memset(&amp;si,0, sizeof(si)); si.cb = sizeof(STARTUPINFO); si.dwFlags = STARTF_USESHOWWINDOW; // dwflags参数表明子进程是否用wshowWindow这个参数 si.wShowWindow = TRUE; // 当创建一个进程，wshowWindows作为参数传递给main函数,true 表示显示子进程的窗口 bool flag=CreateProcessA(NULL,argv[1], NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &amp;si, &amp;pi); if (flag) &#123; //createProcessA表示第二个参数是char[],createProcess表示wchar[](unicode) GetLocalTime(&amp;startTime); WaitForSingleObject(pi.hProcess, INFINITE); //等待子进程结束 GetLocalTime(&amp;endTime); int durtion = getDurtion(startTime, endTime); cout &lt;&lt; &quot;The start time is: &quot;; outputTime(startTime); cout &lt;&lt; &quot;The end time is: &quot;; outputTime(endTime); cout &lt;&lt; &quot;The durtion is &quot; &lt;&lt; durtion &lt;&lt; &quot;ms&quot; &lt;&lt; endl; &#125; else &#123; cout &lt;&lt; &quot;The chiidProcess failed to be created!!&quot;; &#125; getchar();&#125;void outputTime(SYSTEMTIME&amp;time)&#123; cout &lt;&lt; time.wYear &lt;&lt; &quot;/&quot; &lt;&lt; time.wMonth &lt;&lt; &quot;/&quot; &lt;&lt; time.wDay &lt;&lt; &quot; &quot; &lt;&lt; time.wHour &lt;&lt; &quot;:&quot; &lt;&lt; time.wMinute &lt;&lt; &quot;:&quot; &lt;&lt; time.wSecond &lt;&lt; &quot;:&quot; &lt;&lt; time.wMilliseconds&lt;&lt;endl;&#125;int getDurtion(SYSTEMTIME&amp;startTime, SYSTEMTIME&amp;endTime) &#123; int tempHour = endTime.wHour - startTime.wHour; int tempMinute = endTime.wMinute - startTime.wMinute; int tempSecond = endTime.wSecond - startTime.wSecond; int tempMillSecond = endTime.wMilliseconds - startTime.wMilliseconds; int duration = ((tempHour * 60 + tempMinute) * 60 + tempSecond) * 1000 + tempMillSecond; return duration;&#125; 几个坑：1.编码：c++ 编码是乱的，没有一个统一的编码，有char,wchar 涉及到中文的时候就很容易出错。解决方法：createProcessA(),STARTUPINFOA,这样就都是char,路径也别设成中文就可以。 配环境的时候，经常缺头文件，需要找到头文件的目录，然后将其添加到path 中就可以。lib: 库文件，具体实现include: 头文件，声明和定义3.手动编译：cl test.cpp编译命令：gcc,g++: 是linuxmicrosoft: cl]]></content>
+      <categories>
+        <category>操作系统</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>操作系统</tag>
+        <tag>进程控制</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[c语言时间函数全攻略]]></title>
+    <url>%2F2016%2F04%2F10%2Fc%E8%AF%AD%E8%A8%80%E6%97%B6%E9%97%B4%E5%87%BD%E6%95%B0%E5%85%A8%E6%94%BB%E7%95%A5%2F</url>
+    <content type="text"><![CDATA[最近在做操作系统相关的实验，其中经常用到获取系统的时间等函数，现在总结一下。 概念：gmt: GreenWich mean time //格林威治时间 utc: Coordinated universal time //世界时 格林威治时间由本初子午线有关，但是现在发现不太精确，不再使用。 utc时间由原子钟确定，更加精确，现在表达时区一般这样表达，如北京utc-8。 通用的库:time.h&gt; structtm{ year,month,….second} // month[0,11], year=now-1900time___t: (long int)time___t time(NULL): 获得1970年1月1日到现在的秒数，utc时间char ctime(time___t):将time_t转换成字符串,gmt时间struct tm localtime(time__t):utc秒数变成当地时间(时区)struct tm* gmtime(time__t):utc秒数变成gmt时间综上：time()得到的秒数是确定的，区别就是转换成具体时间是gmt时间还是当地时间，直接由time__t计算,不加时区得到的是gmt时间 特有的类：Linux 下： &lt;sys/time.h&gt; strcut timeval ，struct timezone struct timeval{ second; //应该都是long int u second; // 微秒 } timezone: 存储时区信息 gettimeofday(struct timeval*,struct timezone*) windows下： &lt;windows.h&gt; GETSYSTEMTIME,SYSTEMTIME SYSTEMTIME: year,month,...second, msecond, 毫秒 GETSystemTime(SYSTEMTIME*) //utc GETLocalTime(SYSTEM*) //local 综上：如果想写跨平台通用的:time+ctime 就够了，不能精确到ms精确到ms：windows+getsystem就够了linux下： gettimeofday -&gt; timeval -&gt;time__t -&gt; getime -&gt; struct tm,麻烦一点。 顺便说下 sleep函数：windows:sleep() //parament 是 sSleep() //parament 是 ms,毫秒 Linux:sleep( ) //parament 是 susleep() //单位是 us ，微秒 1s= 1000 ms =1000000 us]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>c语言</tag>
+        <tag>时间函数</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[计算机组成原理基础]]></title>
+    <url>%2F2015%2F11%2F03%2F%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86%E5%9F%BA%E7%A1%80%2F</url>
+    <content type="text"><![CDATA[寄存器： 在CPU中地址总线： 传送地址，在内存中找到相应的地址。只能是从CPU—地址总线： 传送数据，从CPU到外面，或者从外面到CPU举例： mov [BX]，AXcpu先计算出物理地址，再通过地址总线（AB）找到内存中的地址（数电讲过，16根线可以1，0找到2^16个地址）然后将AX中的值通过数据总线（DB）写到该内存。（怎么实现的就是硬件的问题了）。 所以处理器的位数一般指的是 通用寄存器的位数。跟总线根数没有直接关系。寄存器越大，计算能力就越快，因为运算都是通过寄存器进行的。 寻址能力与地址总线根数有关系。32根总线寻址空间就是2^32=4G 关于操作系统位数和CPU 位数，其实没有什么区别，64位只有配合64 位的操作系统和64 位的软件才能发挥最大效能。64 CPU从硬件上提供了支持，如地址总线变大，寄存器变大，但是如果采用32 的系统，就相当于给你提供了 FAX（假设，64位）但是你的程序不用。 64位程序只能64位系统，比如可能寻址超过4G,32位系统就跟不上，但是64位却可以。 64位系统必须64位CPU，因为64位系统就是为64位的处理器设计的，处理器变了，操作系统肯定也需要变，因为毕竟操作系统在软件执行时很重要。举个例子，存储器管理，可能32位系统最多设计的就是分配4G内存，但是现在64位寻址能力更强，系统就应该相应的分配更大内存。 ###总结：都是向下兼容：硬件升级—–操作系统升级—–软件升级硬件兼容旧操作系统。操作系统兼容旧软件。反之就不兼容。 程序向下兼容问题：机器码跟平台有很大关系：linux,window 就不说了，文件格式，DLL什么都不一样。都是windows,系统升级了有时软件不兼容，因为dll之类的要重新做，可能就不兼容了.源代码级别的，跟平台关系：java 完全跨平台。所有类型都是定的。c常常说是源代码级别跨平台的，但是不严谨。因为c并没有规定 int 的字长，字长是编译器根据操作系统来决定的。所以可能申请内存扩平台会错误，但是写成 sizeof(int )一般就没有问题了。比如为了兼容DOS程序引入DOS系统和实模式。 大端和小端： 小端：低字节在低地址，高字节在高字节，大端：低字节在高地址，高字节在低地址]]></content>
+      <categories>
+        <category>计算机基础</category>
+      </categories>
+      <tags>
+        <tag>总线</tag>
+        <tag>cpu位数</tag>
+        <tag>计算机组成原理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[中文编码那些事]]></title>
+    <url>%2F2015%2F10%2F15%2F%E4%B8%AD%E6%96%87%E7%BC%96%E7%A0%81%E9%82%A3%E4%BA%9B%E4%BA%8B%2F</url>
+    <content type="text"><![CDATA[今天终于搞清楚了各种编码的关系，以后不要再纠结这些东西了。ANSI: Americal National Standard Institute,泛指这种编码方式： char 型 0-255，Ascii 码 0-127， 在ANSI编码中，ASCLL码还是一个字节，用两个字节表示非ASCLL 码，如中文，韩文等，特点是首字节是 128-255。 如‘啊’在GB2312-80中表示为 176，161. GB2312-80: 首字节 128-255，第二字节 128- 255 GBK: 首字节 128-255，第二字节 64-255 GB18030： 两个或四个字节 首字节 128-255 ，第二，四字节反正可以区分开 Unicode: 一种编码方式。包含了全世界所有的字符。 Ucs: universal character set, 分为UCS-2和UCS-4.分别表示 16位和 32 位。基本跟unicode 没有分别，只是属于两个不同的机构推出来的。 UTF8：unicode translation format ,只是unicode 码的一种实现方式，为了避免浪费空间。 具体来说，vc用的还是GBjava,python 都支持unicode，不是utf-8 通常所说的编码 uincode和utf-8,其中unicode 是指两个字节的定长编码（官方的），utf-8是变长编码。]]></content>
+      <categories>
+        <category>计算机基础</category>
+      </categories>
+      <tags>
+        <tag>编码</tag>
+        <tag>utf-8</tag>
+        <tag>unicode</tag>
+        <tag>GB2312</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[编译过程]]></title>
+    <url>%2F2015%2F10%2F10%2F%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B%2F</url>
+    <content type="text"><![CDATA[我的理解： 预处理：处理带#的，如将include的文件内容全部包含进来，处理end if 等. 编译：词法分析，生成汇编代码，编译后没有变量名概念，编译同时对代码进行优化。 汇编：将汇编代码生成机器代码。 连接：现在一个工程比如有很多文件，分开编译后会形成很多个机器代码文件，链接就是就是将这些文件组合起来。分为静态，动态。静态链接(库)：比如把函数调用部分换成对应的机器代码，将很多的机器代码直接拼在一起形成一个exe文件。动态链接（库）：比如把函数调用部分换成对应的机器代码的地址，运行的时候在去加载对应的机器代码。这些机器代码都存在.dll 文件中。 机器代码： Cpu能够直接执行的指令。与机器有关，理论上机器换了，可能机器代码就不能执行了。但是现在 的cpu，intel,AMD,都用的是相同的指令集。所以由于硬件的原因基本不存在了。剩下的就是操作系统的问题。 c,c++等都不是跨平台的，exe 文件不能在linux 下运行：原因： 1.文件格式不同, exe文件不止有机器指令等信息，还有其他内容 2.可能要加载系统的dll文件。 但是可以说c.c++是源代码跨平台的，因为不同平台，不同的编译器之后，是同样的结果。（使用标准库的情况下），如果使用MFC等windows api的话，代码移植到linux下就不行了。因为缺少对应的系统类库的支持。但是也可以说c++ 不是跨平台的，比如不同的操作系统，int 的字节长度就不同。]]></content>
+      <categories>
+        <category>计算机基础</category>
+      </categories>
+      <tags>
+        <tag>编译原理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[变量的声明和定义]]></title>
+    <url>%2F2015%2F05%2F19%2F%E5%8F%98%E9%87%8F%E7%9A%84%E5%A3%B0%E6%98%8E%E5%92%8C%E5%AE%9A%E4%B9%89%2F</url>
+    <content type="text"><![CDATA[我们在程序设计中，时时刻刻都用到变量的定义和变量的声明，可有些时候我们对这个概念不是很清楚，知道它是怎么用，但却不知是怎么一会事，下面我就简单的把他们的区别介绍如下：(望我的指点对你受益) 变量的声明有两种情况： 1、一种是需要建立存储空间的。例如：int a 在声明的时候就已经建立了存储空间。 2、另一种是不需要建立存储空间的。 例如：extern int a 其中变量a是在别的文件中定义的。 前者是“定义性声明（defining declaration）”或者称为“定义（definition）”，而后者是“引用性声明（referncing declaration）”，从广义的角度来讲声明中包含着定义，即定义是声明的一个特例，所以并非所有的声明都是定义，例如：int a 它既是声明，同时又是定义。然而对于 extern a 来讲它只是声明不是定义。一般的情况下我们常常这样叙述，把建立空间的声明称之为“定义”，而把不需要建立存储空间的声明称之为“声明”。很明显我们在这里指的声明是范围比较窄的，即狭义上的声明，也就是说非定义性质的声明，例如：在主函数中： int main() {extern int A;//这是个声明而不是定义，声明A是一个已经定义了的外部变量//注意：声明外部变量时可以把变量类型去掉如：extern A;dosth(); //执行函数}int A; //是定义，定义了A为整型的外部变量外部变量的“定义”与外部变量的“声明”是不相同的,外部变量的定义只能有一次，它的位置是在所有函数之外，而同一个文件中的外部变量声明可以是多次的，它可以在函数之内(哪个函数要用就在那个函数中声明)也可以在函数之外(在外部变量的定义点之前)。系统会根据外部变量的定义(而不是根据外部变量的声明)分配存储空间的。对于外部变量来讲，初始化只能是在“定义”中进行,而不是在“声明”中。所谓的“声明”，其作用，是声明该变量是一个已在后面定义过的外部变量，仅仅是为了“提前”引用该变量而作的“声明”而已。extern 只作声明，不作任何定义。 （我们声明的最终目的是为了提前使用，即在定义之前使用，如果不需要提前使用就没有单独声明的必要，变量是如此，函数也是如此，所以声明不会分配存储空间，只有定义时才会分配存储空间。） 用static来声明一个变量的作用有二： (1)对于局部变量用static声明，则是为该变量分配的空间在整个程序的执行期内都始终存在。 (2)外部变量用static来声明，则该变量的作用只限于本文件模块。 我的几点理解： 1.关于变量名，变量名只是一个语法上的概念，编译之后就不存在这个概念了，如果是全局变量，直接编译时就分配内存，变量名直接用地址代替了，如果是局部变量，是在运行时分配内存，堆栈，变量名可以用当前分配的地址代替。总之，想的太深会涉及很多 编译原理的知识。]]></content>
+      <categories>
+        <category>c/c++</category>
+      </categories>
+      <tags>
+        <tag>c/c++</tag>
+        <tag>声明和定义</tag>
+        <tag>外部变量</tag>
+      </tags>
+  </entry>
+</search>
